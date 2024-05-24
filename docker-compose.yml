@@ -1,0 +1,30 @@
+version: "3.8"
+
+services:
+  db:
+    container_name: aigle_api_db_container
+    image: postgres:latest
+    environment:
+      POSTGRES_USER: ${SQL_USER}
+      POSTGRES_PASSWORD: ${SQL_PASSWORD}
+    ports:
+      - "${SQL_PORT}:5432"
+    networks:
+      - db
+    volumes:
+      - aigle_data:/var/lib/postgresql/data
+  app:
+    container_name: aigle_api_app_container
+    image: aigle_api_app_container
+    env_file: .env.compose
+    ports:
+      - "8000:8000"
+    networks:
+      - db
+
+networks:
+  db:
+    driver: bridge
+
+volumes:
+  aigle_data:
