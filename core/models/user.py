@@ -7,6 +7,9 @@ from django.contrib.auth.models import PermissionsMixin
 from django.utils.translation import gettext_lazy as _
 
 from common.constants.models import DEFAULT_MAX_LENGTH
+from common.models.deletable import DeletableModelMixin
+from common.models.timestamped import TimestampedModelMixin
+from common.models.uuid import UuidModelMixin
 from core.managers.user import UserManager
 
 class UserRole(models.TextChoices):
@@ -14,7 +17,7 @@ class UserRole(models.TextChoices):
     ADMIN = "ADMIN", "ADMIN"
     REGULAR = "REGULAR", "REGULAR"
 
-class User(AbstractBaseUser, PermissionsMixin):
+class User(AbstractBaseUser, PermissionsMixin, TimestampedModelMixin, UuidModelMixin, DeletableModelMixin):
     email = models.EmailField(
         unique=True,
         max_length=255,
@@ -28,12 +31,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     is_staff = None
     is_active = models.BooleanField(
         _("active"),
-        default=True,
-        help_text=_(
-            "Designates whether this user should be "
-            "treated as active. Unselect this instead "
-            "of deleting accounts."
-        ),
+        default=True
     )
     date_joined = models.DateTimeField(_("date joined"), default=datetime.now)
 

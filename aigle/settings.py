@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     "rest_framework",
     "core",
     "djoser",
+    "django_filters",
     "debug_toolbar"
 ]
 DJOSER = {
@@ -155,6 +156,7 @@ REST_FRAMEWORK = {
         "djangorestframework_camel_case.parser.CamelCaseJSONParser",
         # Any other parsers
     ),
+    'DEFAULT_FILTER_BACKENDS': ['django_filters.rest_framework.DjangoFilterBackend']
 }
 SIMPLE_JWT = {
     "AUTH_HEADER_TYPES": ("JWT",),
@@ -166,7 +168,7 @@ SIMPLE_JWT = {
 # Internationalization
 # https://docs.djangoproject.com/en/5.0/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = 'fr'
 
 TIME_ZONE = 'UTC'
 

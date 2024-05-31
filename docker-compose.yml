@@ -3,7 +3,7 @@ version: "3.8"
 services:
   db:
     container_name: aigle_api_db_container
-    image: postgres:latest
+    image: postgis/postgis:latest
     environment:
       POSTGRES_USER: ${SQL_USER}
       POSTGRES_PASSWORD: ${SQL_PASSWORD}

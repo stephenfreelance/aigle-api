@@ -7,6 +7,10 @@ class UserSerializer(UserSerializer):
     class Meta(UserSerializer.Meta):
         model = UserModel
         fields = [
+            "uuid",
+            "created_at",
+            "updated_at",
             "email",
-            "user_role"
+            "user_role",
+            "deleted"
         ]
