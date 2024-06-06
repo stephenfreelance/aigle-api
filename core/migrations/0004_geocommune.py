@@ -6,27 +6,37 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('core', '0003_postgis'),
+        ("core", "0003_postgis"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='GeoCommune',
+            name="GeoCommune",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('deleted', models.BooleanField(default=False)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('uuid', models.UUIDField(default=uuid.uuid4, editable=False)),
-                ('name', models.CharField(max_length=255)),
-                ('display_name', models.CharField(max_length=255)),
-                ('iso_code', models.CharField(max_length=255)),
-                ('geometry', django.contrib.gis.db.models.fields.GeometryField(srid=4326)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("deleted", models.BooleanField(default=False)),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                ("uuid", models.UUIDField(default=uuid.uuid4, editable=False)),
+                ("name", models.CharField(max_length=255)),
+                ("display_name", models.CharField(max_length=255)),
+                ("iso_code", models.CharField(max_length=255)),
+                (
+                    "geometry",
+                    django.contrib.gis.db.models.fields.GeometryField(srid=4326),
+                ),
             ],
             options={
-                'abstract': False,
+                "abstract": False,
             },
         ),
     ]

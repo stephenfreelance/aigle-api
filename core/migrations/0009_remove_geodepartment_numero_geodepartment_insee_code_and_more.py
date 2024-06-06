@@ -4,45 +4,44 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('core', '0008_rename_iso_code_georegion_insee_code'),
+        ("core", "0008_rename_iso_code_georegion_insee_code"),
     ]
 
     operations = [
         migrations.RemoveField(
-            model_name='geodepartment',
-            name='numero',
+            model_name="geodepartment",
+            name="numero",
         ),
         migrations.AddField(
-            model_name='geodepartment',
-            name='insee_code',
+            model_name="geodepartment",
+            name="insee_code",
             field=models.CharField(default=1, max_length=255, unique=True),
             preserve_default=False,
         ),
         migrations.AlterField(
-            model_name='geocommune',
-            name='display_name',
+            model_name="geocommune",
+            name="display_name",
             field=models.CharField(max_length=255, unique=True),
         ),
         migrations.AlterField(
-            model_name='geocommune',
-            name='iso_code',
+            model_name="geocommune",
+            name="iso_code",
             field=models.CharField(max_length=255, unique=True),
         ),
         migrations.AlterField(
-            model_name='geocommune',
-            name='name',
+            model_name="geocommune",
+            name="name",
             field=models.CharField(max_length=255, unique=True),
         ),
         migrations.AlterField(
-            model_name='geodepartment',
-            name='display_name',
+            model_name="geodepartment",
+            name="display_name",
             field=models.CharField(max_length=255, unique=True),
         ),
         migrations.AlterField(
-            model_name='geodepartment',
-            name='name',
+            model_name="geodepartment",
+            name="name",
             field=models.CharField(max_length=255, unique=True),
         ),
     ]

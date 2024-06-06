@@ -5,16 +5,17 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('core', '0009_remove_geodepartment_numero_geodepartment_insee_code_and_more'),
+        ("core", "0009_remove_geodepartment_numero_geodepartment_insee_code_and_more"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='geodepartment',
-            name='surface_km2',
-            field=models.IntegerField(default=1, validators=[django.core.validators.MinValueValidator(0)]),
+            model_name="geodepartment",
+            name="surface_km2",
+            field=models.IntegerField(
+                default=1, validators=[django.core.validators.MinValueValidator(0)]
+            ),
             preserve_default=False,
         ),
     ]

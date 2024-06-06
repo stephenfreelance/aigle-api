@@ -1,7 +1,6 @@
 from typing import Generic
 
 from typing import TypeVar
-from django.db import models
 
 from common.models.deletable import DeletableModelMixin
 

@@ -25,7 +25,7 @@ class UserManager(BaseUserManager):
 
     def create_superuser(self, email, password, **extra_fields):
         from core.models.user import UserRole
-        
+
         extra_fields.setdefault("user_role", UserRole.SUPER_ADMIN)
 
         if extra_fields.get("user_role") is not UserRole.SUPER_ADMIN:

@@ -3,9 +3,9 @@
 from django.db import migrations
 from django.contrib.postgres.operations import CreateExtension
 
-class Migration(migrations.Migration):
 
+class Migration(migrations.Migration):
     dependencies = [
-        ('core', '0002_user_created_at_user_deleted_user_updated_at_and_more'),
+        ("core", "0002_user_created_at_user_deleted_user_updated_at_and_more"),
     ]
     operations = [CreateExtension("postgis")]

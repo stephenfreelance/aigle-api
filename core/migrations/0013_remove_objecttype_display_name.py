@@ -4,14 +4,13 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('core', '0012_objecttype'),
+        ("core", "0012_objecttype"),
     ]
 
     operations = [
         migrations.RemoveField(
-            model_name='objecttype',
-            name='display_name',
+            model_name="objecttype",
+            name="display_name",
         ),
     ]

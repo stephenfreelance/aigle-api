@@ -2,6 +2,8 @@ from core.views.geo_commune import GeoCommuneViewSet
 from core.views.geo_department import GeoDepartmentViewSet
 from core.views.geo_region import GeoRegionViewSet
 from core.views.object_type import ObjectTypeViewSet
+from core.views.object_type_category import ObjectTypeCategoryViewSet
+from core.views.tile_set import TileSetViewSet
 from core.views.user import UserViewSet
 from rest_framework.routers import DefaultRouter
 
@@ -13,5 +15,12 @@ router.register("geo/department", GeoDepartmentViewSet, basename="GeoDepartmentV
 router.register("geo/region", GeoRegionViewSet, basename="GeoRegionViewSet")
 
 router.register("object-type", ObjectTypeViewSet, basename="ObjectTypeViewSet")
+router.register(
+    "object-type-category",
+    ObjectTypeCategoryViewSet,
+    basename="ObjectTypeCategoryViewSet",
+)
+
+router.register("tile-set", TileSetViewSet, basename="TileSetViewSet")
 
 urlpatterns = router.urls

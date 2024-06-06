@@ -4,20 +4,19 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('core', '0010_geodepartment_surface_km2'),
+        ("core", "0010_geodepartment_surface_km2"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='geocommune',
-            name='display_name',
+            model_name="geocommune",
+            name="display_name",
             field=models.CharField(max_length=255),
         ),
         migrations.AlterField(
-            model_name='geocommune',
-            name='name',
+            model_name="geocommune",
+            name="name",
             field=models.CharField(max_length=255),
         ),
     ]

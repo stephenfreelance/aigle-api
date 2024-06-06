@@ -3,14 +3,13 @@ from core.serializers import UuidTimestampedModelSerializerMixin
 from rest_framework import serializers
 
 
-
 class GeoCommuneSerializer(UuidTimestampedModelSerializerMixin):
     class Meta(UuidTimestampedModelSerializerMixin.Meta):
         model = GeoCommune
         fields = UuidTimestampedModelSerializerMixin.Meta.fields + [
             "name",
             "display_name",
-            "code"
+            "code",
         ]
 
     code = serializers.CharField(source="iso_code")

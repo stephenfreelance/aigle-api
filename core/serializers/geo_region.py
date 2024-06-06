@@ -12,15 +12,14 @@ class GeoRegionSerializer(UuidTimestampedModelSerializerMixin):
             "name",
             "display_name",
             "code",
-            "surface_km2"
+            "surface_km2",
         ]
 
     code = serializers.CharField(source="insee_code")
-    
+
+
 class GeoRegionDetailSerializer(GeoRegionSerializer):
     class Meta(GeoRegionSerializer.Meta):
-        fields = GeoRegionSerializer.Meta.fields + [
-            'departments'
-        ]
-    
+        fields = GeoRegionSerializer.Meta.fields + ["departments"]
+
     departments = GeoDepartmentSerializer(many=True, read_only=True)

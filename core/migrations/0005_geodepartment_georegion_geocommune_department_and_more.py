@@ -7,55 +7,85 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('core', '0004_geocommune'),
+        ("core", "0004_geocommune"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='GeoDepartment',
+            name="GeoDepartment",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('deleted', models.BooleanField(default=False)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('uuid', models.UUIDField(default=uuid.uuid4, editable=False)),
-                ('name', models.CharField(max_length=255)),
-                ('display_name', models.CharField(max_length=255)),
-                ('numero', models.CharField(max_length=255)),
-                ('geometry', django.contrib.gis.db.models.fields.GeometryField(srid=4326)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("deleted", models.BooleanField(default=False)),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                ("uuid", models.UUIDField(default=uuid.uuid4, editable=False)),
+                ("name", models.CharField(max_length=255)),
+                ("display_name", models.CharField(max_length=255)),
+                ("numero", models.CharField(max_length=255)),
+                (
+                    "geometry",
+                    django.contrib.gis.db.models.fields.GeometryField(srid=4326),
+                ),
             ],
             options={
-                'abstract': False,
+                "abstract": False,
             },
         ),
         migrations.CreateModel(
-            name='GeoRegion',
+            name="GeoRegion",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('deleted', models.BooleanField(default=False)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('uuid', models.UUIDField(default=uuid.uuid4, editable=False)),
-                ('name', models.CharField(max_length=255)),
-                ('display_name', models.CharField(max_length=255)),
-                ('iso_code', models.CharField(max_length=255)),
-                ('geometry', django.contrib.gis.db.models.fields.GeometryField(srid=4326)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("deleted", models.BooleanField(default=False)),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                ("uuid", models.UUIDField(default=uuid.uuid4, editable=False)),
+                ("name", models.CharField(max_length=255)),
+                ("display_name", models.CharField(max_length=255)),
+                ("iso_code", models.CharField(max_length=255)),
+                (
+                    "geometry",
+                    django.contrib.gis.db.models.fields.GeometryField(srid=4326),
+                ),
             ],
             options={
-                'abstract': False,
+                "abstract": False,
             },
         ),
         migrations.AddField(
-            model_name='geocommune',
-            name='department',
-            field=models.ForeignKey(default=1, on_delete=django.db.models.deletion.CASCADE, related_name='communes', to='core.geodepartment'),
+            model_name="geocommune",
+            name="department",
+            field=models.ForeignKey(
+                default=1,
+                on_delete=django.db.models.deletion.CASCADE,
+                related_name="communes",
+                to="core.geodepartment",
+            ),
             preserve_default=False,
         ),
         migrations.AddField(
-            model_name='geodepartment',
-            name='region',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='departments', to='core.georegion'),
+            model_name="geodepartment",
+            name="region",
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.CASCADE,
+                related_name="departments",
+                to="core.georegion",
+            ),
         ),
     ]

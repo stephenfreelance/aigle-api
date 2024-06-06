@@ -4,15 +4,14 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('core', '0007_alter_georegion_display_name_and_more'),
+        ("core", "0007_alter_georegion_display_name_and_more"),
     ]
 
     operations = [
         migrations.RenameField(
-            model_name='georegion',
-            old_name='iso_code',
-            new_name='insee_code',
+            model_name="georegion",
+            old_name="iso_code",
+            new_name="insee_code",
         ),
     ]

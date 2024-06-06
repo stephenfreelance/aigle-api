@@ -4,7 +4,6 @@ from core.serializers.geo_commune import GeoCommuneSerializer
 from rest_framework import serializers
 
 
-
 class GeoDepartmentSerializer(UuidTimestampedModelSerializerMixin):
     class Meta(UuidTimestampedModelSerializerMixin.Meta):
         model = GeoDepartment
@@ -12,16 +11,14 @@ class GeoDepartmentSerializer(UuidTimestampedModelSerializerMixin):
             "name",
             "display_name",
             "code",
-            "surface_km2"
+            "surface_km2",
         ]
-        
+
     code = serializers.CharField(source="insee_code")
-        
-    
+
+
 class GeoDepartmentDetailSerializer(GeoDepartmentSerializer):
     class Meta(GeoDepartmentSerializer.Meta):
-        fields = GeoDepartmentSerializer.Meta.fields + [
-            'communes'
-        ]
+        fields = GeoDepartmentSerializer.Meta.fields + ["communes"]
 
     communes = GeoCommuneSerializer(many=True, read_only=True)

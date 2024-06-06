@@ -12,12 +12,20 @@ from common.models.timestamped import TimestampedModelMixin
 from common.models.uuid import UuidModelMixin
 from core.managers.user import UserManager
 
+
 class UserRole(models.TextChoices):
     SUPER_ADMIN = "SUPER_ADMIN", "SUPER_ADMIN"
     ADMIN = "ADMIN", "ADMIN"
     REGULAR = "REGULAR", "REGULAR"
 
-class User(AbstractBaseUser, PermissionsMixin, TimestampedModelMixin, UuidModelMixin, DeletableModelMixin):
+
+class User(
+    AbstractBaseUser,
+    PermissionsMixin,
+    TimestampedModelMixin,
+    UuidModelMixin,
+    DeletableModelMixin,
+):
     email = models.EmailField(
         unique=True,
         max_length=255,
@@ -29,10 +37,7 @@ class User(AbstractBaseUser, PermissionsMixin, TimestampedModelMixin, UuidModelM
     first_name = None
     last_name = None
     is_staff = None
-    is_active = models.BooleanField(
-        _("active"),
-        default=True
-    )
+    is_active = models.BooleanField(_("active"), default=True)
     date_joined = models.DateTimeField(_("date joined"), default=datetime.now)
 
     # Additional fields
