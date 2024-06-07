@@ -35,6 +35,8 @@ Authentication in this project is managed with [djoser](https://djoser.readthedo
 
 #### Set-up
 
+This project is meant to be used with Python 3.12.3.
+
 1. Create a virtual environment and activate it (here an example with `venv`)
 ```
 python3 -m venv venv
@@ -46,7 +48,13 @@ source venv/bin/activate
 pip3 install -r requirements.txt
 ```
 
-3. Run local server
+3. Create `.env` and `.env.compose` file and replace values
+```
+cp .env.template .env
+cp .env.compose.template .env.compose
+```
+
+4. Run local server
 ```
 source .env && source venv/bin/activate && make start
 ```
