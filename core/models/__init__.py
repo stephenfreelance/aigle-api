@@ -7,6 +7,10 @@ from .geo_region import GeoRegion
 from .object_type_category import ObjectTypeCategory
 from .object_type import ObjectType
 
+from .detection import Detection
+from .detection_data import DetectionData
+from .detected_object import DetectedObject
+
 from .tile_set import TileSet
 
 from .user_group import UserGroup, UserUserGroup
