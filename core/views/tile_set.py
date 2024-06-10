@@ -1,6 +1,4 @@
-from rest_framework.viewsets import ModelViewSet
-from common.views.countable import CountableModelViewSetMixin
-from common.views.deletable import DeletableModelViewSetMixin
+from common.views.base import BaseViewSetMixin
 from django_filters import FilterSet, CharFilter, MultipleChoiceFilter
 
 from django.db.models import Q
@@ -23,10 +21,7 @@ class TileSetFilter(FilterSet):
         return queryset.filter(Q(name__icontains=value) | Q(url__icontains=value))
 
 
-class TileSetViewSet(
-    DeletableModelViewSetMixin[TileSet], CountableModelViewSetMixin, ModelViewSet
-):
-    lookup_field = "uuid"
+class TileSetViewSet(BaseViewSetMixin[TileSet]):
     filterset_class = TileSetFilter
 
     def get_serializer_class(self):

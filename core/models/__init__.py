@@ -9,7 +9,7 @@ from .object_type import ObjectType
 
 from .detection import Detection
 from .detection_data import DetectionData
-from .detected_object import DetectedObject
+from .detection_object import DetectionObject
 
 from .tile_set import TileSet
 

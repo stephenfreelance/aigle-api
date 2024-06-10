@@ -1,6 +1,4 @@
-from rest_framework.viewsets import ModelViewSet
-from common.views.countable import CountableModelViewSetMixin
-from common.views.deletable import DeletableModelViewSetMixin
+from common.views.base import BaseViewSetMixin
 from django_filters import FilterSet, CharFilter
 
 from django.db.models import Q
@@ -20,10 +18,7 @@ class GeoCommuneFilter(FilterSet):
         return queryset.filter(Q(name__icontains=value) | Q(iso_code__icontains=value))
 
 
-class GeoCommuneViewSet(
-    DeletableModelViewSetMixin[GeoCommune], CountableModelViewSetMixin, ModelViewSet
-):
-    lookup_field = "uuid"
+class GeoCommuneViewSet(BaseViewSetMixin[GeoCommune]):
     filterset_class = GeoCommuneFilter
 
     def get_serializer_class(self):
@@ -32,6 +27,3 @@ class GeoCommuneViewSet(
     def get_queryset(self):
         queryset = GeoCommune.objects.order_by("iso_code")
         return queryset.distinct()
-
-    def get_serializer_context(self):
-        return {"request": self.request}

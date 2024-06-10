@@ -1,6 +1,4 @@
-from rest_framework.viewsets import ModelViewSet
-from common.views.countable import CountableModelViewSetMixin
-from common.views.deletable import DeletableModelViewSetMixin
+from common.views.base import BaseViewSetMixin
 from django.db.models import Q
 
 
@@ -33,11 +31,8 @@ class ObjectTypeCategoryFilter(FilterSet):
 
 
 class ObjectTypeCategoryViewSet(
-    DeletableModelViewSetMixin[ObjectTypeCategory],
-    CountableModelViewSetMixin,
-    ModelViewSet,
+    BaseViewSetMixin[ObjectTypeCategory],
 ):
-    lookup_field = "uuid"
     filterset_class = ObjectTypeCategoryFilter
 
     def get_serializer_class(self):

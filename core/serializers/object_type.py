@@ -26,7 +26,7 @@ class ObjectTypeInputSerializer(ObjectTypeDetailSerializer):
         fields = ["name", "color", "categories_uuids"]
 
     categories_uuids = serializers.ListField(
-        child=serializers.UUIDField(), required=False
+        child=serializers.UUIDField(), required=False, allow_empty=True, write_only=True
     )
 
     def create(self, validated_data):

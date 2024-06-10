@@ -8,8 +8,8 @@ from common.models.uuid import UuidModelMixin
 from core.models.object_type import ObjectType
 
 
-class DetectedObject(TimestampedModelMixin, UuidModelMixin, DeletableModelMixin):
-    address = models.CharField(max_length=DEFAULT_MAX_LENGTH, unique=True, null=True)
+class DetectionObject(TimestampedModelMixin, UuidModelMixin, DeletableModelMixin):
+    address = models.CharField(max_length=DEFAULT_MAX_LENGTH, null=True)
     object_type = models.ForeignKey(
         ObjectType, related_name="detected_objects", on_delete=models.CASCADE
     )

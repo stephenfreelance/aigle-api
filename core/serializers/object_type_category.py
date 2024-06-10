@@ -23,10 +23,10 @@ class ObjectTypeCategoryDetailSerializer(ObjectTypeCategorySerializer):
 
 class ObjectTypeCategoryInputSerializer(ObjectTypeCategorySerializer):
     class Meta(ObjectTypeCategorySerializer.Meta):
-        fields = ["name", "object_types", "object_types_uuids"]
+        fields = ["name", "object_types_uuids"]
 
     object_types_uuids = serializers.ListField(
-        child=serializers.UUIDField(), required=False
+        child=serializers.UUIDField(), required=False, allow_empty=True, write_only=True
     )
 
     def create(self, validated_data):

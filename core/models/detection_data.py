@@ -30,6 +30,6 @@ class DetectionData(TimestampedModelMixin, UuidModelMixin, DeletableModelMixin):
         max_length=DEFAULT_MAX_LENGTH,
         choices=DetectionValidationStatus.choices,
     )
-    user_last_update_user_id = models.ForeignKey(
+    user_last_update_user = models.ForeignKey(
         User, related_name="detection_datas_last_updated", on_delete=models.CASCADE
     )

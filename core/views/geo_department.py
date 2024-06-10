@@ -1,6 +1,4 @@
-from rest_framework.viewsets import ModelViewSet
-from common.views.countable import CountableModelViewSetMixin
-from common.views.deletable import DeletableModelViewSetMixin
+from common.views.base import BaseViewSetMixin
 
 from django.db.models import Q
 
@@ -25,10 +23,7 @@ class GeoDepartmentFilter(FilterSet):
         )
 
 
-class GeoDepartmentViewSet(
-    DeletableModelViewSetMixin[GeoDepartment], CountableModelViewSetMixin, ModelViewSet
-):
-    lookup_field = "uuid"
+class GeoDepartmentViewSet(BaseViewSetMixin[GeoDepartment]):
     filterset_class = GeoDepartmentFilter
 
     def get_serializer_class(self):
@@ -40,6 +35,3 @@ class GeoDepartmentViewSet(
     def get_queryset(self):
         queryset = GeoDepartment.objects.order_by("insee_code")
         return queryset.distinct()
-
-    def get_serializer_context(self):
-        return {"request": self.request}

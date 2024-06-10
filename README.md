@@ -62,3 +62,13 @@ source .env && source venv/bin/activate && make start
 During the development, a graphic interface is provided by Django to test the API: make `GET`, `POST`,... requests easily. It is accessible by default on http://127.0.0.1:8000/
 
 I recommend to use an extension like [Requestly](https://chromewebstore.google.com/detail/requestly-intercept-modif/mdnleldcmiljblolnjhpnblkcekpdkpa) to add the token generated in the header and access to protected routes.
+
+### Commands
+
+Some commands need to be run to seed data necessary for the app to works well.
+
+```
+python manage.py import_georegion
+python manage.py import_geodepartment
+python manage.py import_geocommune
+```

@@ -1,3 +1,4 @@
+from core.views.detection import DetectionViewSet
 from core.views.geo_commune import GeoCommuneViewSet
 from core.views.geo_department import GeoDepartmentViewSet
 from core.views.geo_region import GeoRegionViewSet
@@ -24,6 +25,8 @@ router.register(
 )
 
 router.register("tile-set", TileSetViewSet, basename="TileSetViewSet")
+
+router.register("detection", DetectionViewSet, basename="DetectionViewSet")
 
 urlpatterns = router.urls
 urlpatterns += [
