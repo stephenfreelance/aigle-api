@@ -1,18 +1,54 @@
 from core.models.detection import Detection, DetectionSource
-from core.models.detection_data import DetectionData
+from core.models.detection_data import (
+    DetectionControlStatus,
+    DetectionData,
+    DetectionValidationStatus,
+)
 from core.models.detection_object import DetectionObject
 from core.models.object_type import ObjectType
 from core.serializers import UuidTimestampedModelSerializerMixin
 from core.serializers.detection_data import DetectionDataInputSerializer
 
+from rest_framework_gis.serializers import GeoFeatureModelSerializer
 from rest_framework import serializers
 
 
-class DetectionSerializer(UuidTimestampedModelSerializerMixin):
+class DetectionMinimalSerializer(
+    UuidTimestampedModelSerializerMixin, GeoFeatureModelSerializer
+):
+    class Meta(UuidTimestampedModelSerializerMixin.Meta):
+        model = Detection
+        geo_field = "geometry"
+        fields = [
+            "uuid",
+            "object_type_uuid",
+            "object_type_color",
+            "detection_control_status",
+            "detection_validation_status",
+        ]
+
+    object_type_uuid = serializers.CharField(source="detection_object.object_type.uuid")
+    object_type_color = serializers.CharField(
+        source="detection_object.object_type.color"
+    )
+    detection_control_status = serializers.ChoiceField(
+        source="detection_data.detection_control_status",
+        choices=DetectionControlStatus.choices,
+    )
+    detection_validation_status = serializers.ChoiceField(
+        source="detection_data.detection_validation_status",
+        choices=DetectionValidationStatus.choices,
+    )
+
+
+class DetectionSerializer(
+    UuidTimestampedModelSerializerMixin, GeoFeatureModelSerializer
+):
     from core.serializers.detection_data import DetectionDataSerializer
 
     class Meta(UuidTimestampedModelSerializerMixin.Meta):
         model = Detection
+        geo_field = "geometry"
         fields = UuidTimestampedModelSerializerMixin.Meta.fields + [
             "geometry",
             "score",
@@ -27,7 +63,7 @@ class DetectionDetailSerializer(DetectionSerializer):
     from core.serializers.detection_object import DetectionObjectSerializer
 
     class Meta(DetectionSerializer.Meta):
-        fields = UuidTimestampedModelSerializerMixin.Meta.fields + [
+        fields = DetectionSerializer.Meta.fields + [
             "detection_object",
         ]
 

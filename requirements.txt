@@ -13,9 +13,11 @@ django-filter==24.2
 django-templated-mail==1.1.1
 djangorestframework==3.15.1
 djangorestframework-camel-case==1.4.2
+djangorestframework-gis==1.0
 djangorestframework-simplejwt==5.3.1
 djoser==2.2.2
 filelock==3.14.0
+GDAL==3.9.0
 identify==2.5.36
 idna==3.7
 Markdown==3.6
@@ -37,3 +39,4 @@ social-auth-core==4.5.4
 sqlparse==0.5.0
 urllib3==2.2.1
 virtualenv==20.26.2
+wheel==0.43.0
