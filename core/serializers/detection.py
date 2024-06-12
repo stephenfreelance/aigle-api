@@ -20,6 +20,7 @@ class DetectionMinimalSerializer(
         model = Detection
         geo_field = "geometry"
         fields = [
+            "id",
             "uuid",
             "object_type_uuid",
             "object_type_color",
@@ -41,15 +42,13 @@ class DetectionMinimalSerializer(
     )
 
 
-class DetectionSerializer(
-    UuidTimestampedModelSerializerMixin, GeoFeatureModelSerializer
-):
+class DetectionSerializer(UuidTimestampedModelSerializerMixin):
     from core.serializers.detection_data import DetectionDataSerializer
 
     class Meta(UuidTimestampedModelSerializerMixin.Meta):
         model = Detection
-        geo_field = "geometry"
         fields = UuidTimestampedModelSerializerMixin.Meta.fields + [
+            "id",
             "geometry",
             "score",
             "detection_source",
@@ -90,9 +89,11 @@ class DetectionInputSerializer(DetectionSerializer):
 
         object_type_uuid = detection_object_data.pop("object_type_uuid")
         object_type = ObjectType.objects.filter(uuid=object_type_uuid).first()
+
         if not object_type:
             raise serializers.ValidationError(
-                f"Object type with following uuid not found: {object_type_uuid}"
+                f"Object type with following uuid not found: {
+                    object_type_uuid}"
             )
 
         detection_object = DetectionObject(**detection_object_data)
@@ -102,7 +103,7 @@ class DetectionInputSerializer(DetectionSerializer):
         # create detection data
 
         detection_data = DetectionData(**validated_data.pop("detection_data"))
-        detection_data.user_last_update_user = self.context["request"].user
+        detection_data.user_last_update = self.context["request"].user
         detection_data.save()
 
         # create detection
@@ -112,6 +113,32 @@ class DetectionInputSerializer(DetectionSerializer):
         instance.detection_data = detection_data
         instance.score = 1
         instance.detection_source = DetectionSource.INTERFACE_DRAWN
+        instance.save()
+
+        return instance
+
+
+class DetectionUpdateSerializer(DetectionSerializer):
+    class Meta(DetectionSerializer.Meta):
+        fields = ["object_type_uuid"]
+
+    object_type_uuid = serializers.UUIDField(write_only=True)
+
+    def update(self, instance: Detection, validated_data):
+        object_type_uuid = validated_data.get("object_type_uuid")
+
+        if object_type_uuid:
+            object_type = ObjectType.objects.filter(uuid=object_type_uuid).first()
+
+            if not object_type:
+                raise serializers.ValidationError(
+                    f"Object type with following uuid not found: {
+                        object_type_uuid}"
+                )
+
+            instance.detection_object.object_type = object_type
+            instance.detection_object.save()
+
         instance.save()
 
         return instance

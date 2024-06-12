@@ -6,9 +6,8 @@ from core.serializers.detection import (
     DetectionDetailSerializer,
     DetectionInputSerializer,
     DetectionMinimalSerializer,
+    DetectionUpdateSerializer,
 )
-from rest_framework.decorators import action
-from rest_framework.response import Response
 from core.utils.filters import GeoBoundsFilter
 
 
@@ -22,8 +21,11 @@ class DetectionViewSet(BaseViewSetMixin[Detection]):
     filterset_class = DetectionFilter
 
     def get_serializer_class(self):
-        if self.action in ["create", "partial_update", "update"]:
+        if self.action in ["create"]:
             return DetectionInputSerializer
+
+        if self.action in ["partial_update", "update"]:
+            return DetectionUpdateSerializer
 
         detail = bool(self.request.query_params.get("detail"))
 
