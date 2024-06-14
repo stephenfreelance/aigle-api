@@ -13,6 +13,17 @@ class TileSetStatus(models.TextChoices):
     DEACTIVATED = "DEACTIVATED", "DEACTIVATED"
 
 
+class TileSetScheme(models.TextChoices):
+    tms = "tms", "tms"
+    xyz = "xyz", "xyz"
+
+
+class TileSetType(models.TextChoices):
+    BACKGROUND = "BACKGROUND", "BACKGROUND"
+    PARTIAL = "PARTIAL", "PARTIAL"
+    INDICATIVE = "INDICATIVE", "INDICATIVE"
+
+
 class TileSet(TimestampedModelMixin, UuidModelMixin, DeletableModelMixin):
     name = models.CharField(max_length=DEFAULT_MAX_LENGTH, unique=True)
     url = models.URLField(max_length=1024, unique=True)
@@ -21,3 +32,10 @@ class TileSet(TimestampedModelMixin, UuidModelMixin, DeletableModelMixin):
         choices=TileSetStatus.choices,
     )
     date = models.DateTimeField(unique=True)
+    tile_set_scheme = models.CharField(
+        max_length=DEFAULT_MAX_LENGTH, choices=TileSetScheme.choices
+    )
+    tile_set_type = models.CharField(
+        max_length=DEFAULT_MAX_LENGTH,
+        choices=TileSetType.choices,
+    )

@@ -9,5 +9,7 @@ class TileSetSerializer(UuidTimestampedModelSerializerMixin):
             "name",
             "url",
             "tile_set_status",
+            "tile_set_scheme",
+            "tile_set_type",
             "date",
         ]

@@ -1,9 +1,19 @@
-from django_filters import BaseInFilter, FilterSet, UUIDFilter, NumberFilter
+from django_filters import (
+    BaseInFilter,
+    FilterSet,
+    UUIDFilter,
+    NumberFilter,
+    ChoiceFilter,
+)
 from rest_framework.exceptions import ValidationError
 from django.contrib.gis.geos import Polygon
 
 
 class UuidInFilter(BaseInFilter, UUIDFilter):
+    pass
+
+
+class ChoiceInFilter(BaseInFilter, ChoiceFilter):
     pass
 
 

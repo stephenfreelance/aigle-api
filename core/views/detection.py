@@ -8,13 +8,21 @@ from core.serializers.detection import (
     DetectionMinimalSerializer,
     DetectionUpdateSerializer,
 )
-from core.utils.filters import GeoBoundsFilter
+from core.utils.filters import GeoBoundsFilter, UuidInFilter
 
 
 class DetectionFilter(GeoBoundsFilter):
+    objectTypesUuids = UuidInFilter(method="search_object_types_uuids")
+
     class Meta(GeoBoundsFilter.Meta):
         model = Detection
         fields = GeoBoundsFilter.Meta.fields + []
+
+    def search_object_types_uuids(self, queryset, name, value):
+        if not value:
+            return queryset
+
+        return queryset.filter(detection_object__object_type__uuid__in=value)
 
 
 class DetectionViewSet(BaseViewSetMixin[Detection]):

@@ -1,17 +1,22 @@
 from common.views.base import BaseViewSetMixin
-from django_filters import FilterSet, CharFilter, MultipleChoiceFilter
+from django_filters import FilterSet, CharFilter
 
 from django.db.models import Q
 
-from core.models.tile_set import TileSet, TileSetStatus
+from core.models.tile_set import TileSet, TileSetScheme, TileSetStatus, TileSetType
 from core.serializers.tile_set import TileSetSerializer
+from core.utils.filters import ChoiceInFilter
 
 
 class TileSetFilter(FilterSet):
     q = CharFilter(method="search")
-    statuses = MultipleChoiceFilter(
+    statuses = ChoiceInFilter(
         field_name="tile_set_status", choices=TileSetStatus.choices
     )
+    schemes = ChoiceInFilter(
+        field_name="tile_set_scheme", choices=TileSetScheme.choices
+    )
+    types = ChoiceInFilter(field_name="tile_set_type", choices=TileSetType.choices)
 
     class Meta:
         model = TileSet

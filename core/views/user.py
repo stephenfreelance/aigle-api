@@ -1,6 +1,6 @@
 from common.views.countable import CountableModelViewSetMixin
 from core.models.user import UserRole
-from django_filters import FilterSet, CharFilter, OrderingFilter, MultipleChoiceFilter
+from django_filters import FilterSet, CharFilter, OrderingFilter
 from rest_framework.viewsets import GenericViewSet
 from rest_framework.mixins import RetrieveModelMixin, ListModelMixin, UpdateModelMixin
 from common.views.deletable import DeletableModelViewSetMixin
@@ -9,6 +9,7 @@ from django.contrib.auth import get_user_model
 from core.serializers.user import UserInputSerializer, UserSerializer
 
 
+from core.utils.filters import ChoiceInFilter
 from core.utils.permissions import AdminRolePermission
 
 UserModel = get_user_model()
@@ -16,7 +17,7 @@ UserModel = get_user_model()
 
 class UserFilter(FilterSet):
     email = CharFilter(lookup_expr="icontains")
-    roles = MultipleChoiceFilter(field_name="user_role", choices=UserRole.choices)
+    roles = ChoiceInFilter(field_name="user_role", choices=UserRole.choices)
     ordering = OrderingFilter(fields=("email", "created_at", "updated_at"))
 
     class Meta:

@@ -1,5 +1,4 @@
 from common.views.base import BaseViewSetMixin
-from django.db.models import Q
 
 
 from django_filters import FilterSet, CharFilter
@@ -21,13 +20,13 @@ class ObjectTypeCategoryFilter(FilterSet):
         fields = ["q"]
 
     def search(self, queryset, name, value):
-        return queryset.filter(Q(name__icontains=value))
+        return queryset.filter(name__icontains=value)
 
     def search_object_types_uuids(self, queryset, name, value):
         if not value:
             return queryset
 
-        return queryset.filter(Q(object_types__uuid__in=value))
+        return queryset.filter(object_types__uuid__in=value)
 
 
 class ObjectTypeCategoryViewSet(
