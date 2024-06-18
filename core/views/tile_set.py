@@ -3,6 +3,7 @@ from django_filters import FilterSet, CharFilter
 
 from django.db.models import Q
 
+from core.contants.order_by import LAYERS_ORDER_BYS
 from core.models.tile_set import TileSet, TileSetScheme, TileSetStatus, TileSetType
 from core.serializers.tile_set import TileSetSerializer
 from core.utils.filters import ChoiceInFilter
@@ -33,7 +34,7 @@ class TileSetViewSet(BaseViewSetMixin[TileSet]):
         return TileSetSerializer
 
     def get_queryset(self):
-        queryset = TileSet.objects.order_by("-date")
+        queryset = TileSet.objects.order_by(*LAYERS_ORDER_BYS)
         return queryset.distinct()
 
     def get_serializer_context(self):

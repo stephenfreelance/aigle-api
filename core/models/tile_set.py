@@ -5,6 +5,7 @@ from common.constants.models import DEFAULT_MAX_LENGTH
 from common.models.deletable import DeletableModelMixin
 from common.models.timestamped import TimestampedModelMixin
 from common.models.uuid import UuidModelMixin
+from django.contrib.gis.db import models as models_gis
 
 
 class TileSetStatus(models.TextChoices):
@@ -26,6 +27,7 @@ class TileSetType(models.TextChoices):
 
 class TileSet(TimestampedModelMixin, UuidModelMixin, DeletableModelMixin):
     name = models.CharField(max_length=DEFAULT_MAX_LENGTH, unique=True)
+    geometry = models_gis.GeometryField()
     url = models.URLField(max_length=1024, unique=True)
     tile_set_status = models.CharField(
         max_length=DEFAULT_MAX_LENGTH,

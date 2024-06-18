@@ -12,4 +12,5 @@ class TileSetSerializer(UuidTimestampedModelSerializerMixin):
             "tile_set_scheme",
             "tile_set_type",
             "date",
+            "geometry",
         ]

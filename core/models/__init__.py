@@ -11,6 +11,7 @@ from .detection import Detection
 from .detection_data import DetectionData
 from .detection_object import DetectionObject
 
+from .tile import Tile
 from .tile_set import TileSet
 
 from .user_group import UserGroup, UserUserGroup
