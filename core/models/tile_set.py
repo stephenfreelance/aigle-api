@@ -27,7 +27,7 @@ class TileSetType(models.TextChoices):
 
 class TileSet(TimestampedModelMixin, UuidModelMixin, DeletableModelMixin):
     name = models.CharField(max_length=DEFAULT_MAX_LENGTH, unique=True)
-    geometry = models_gis.GeometryField()
+    geometry = models_gis.GeometryField(null=True)
     url = models.URLField(max_length=1024, unique=True)
     tile_set_status = models.CharField(
         max_length=DEFAULT_MAX_LENGTH,

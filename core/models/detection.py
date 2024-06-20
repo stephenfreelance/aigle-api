@@ -10,6 +10,9 @@ from core.models.detection_data import DetectionData
 from django.contrib.gis.db import models as models_gis
 from django.core.validators import MinValueValidator, MaxValueValidator
 
+from core.models.tile import Tile
+from core.models.tile_set import TileSet
+
 
 class DetectionSource(models.TextChoices):
     INTERFACE_DRAWN = "INTERFACE_DRAWN", "INTERFACE_DRAWN"
@@ -33,4 +36,9 @@ class Detection(TimestampedModelMixin, UuidModelMixin, DeletableModelMixin):
         on_delete=models.CASCADE,
         null=True,
         blank=True,
+    )
+
+    tile = models.ForeignKey(Tile, related_name="detections", on_delete=models.CASCADE)
+    tile_set = models.ForeignKey(
+        TileSet, related_name="detections", on_delete=models.CASCADE
     )

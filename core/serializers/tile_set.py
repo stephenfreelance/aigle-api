@@ -2,7 +2,7 @@ from core.models.tile_set import TileSet
 from core.serializers import UuidTimestampedModelSerializerMixin
 
 
-class TileSetSerializer(UuidTimestampedModelSerializerMixin):
+class TileSetMinimalSerializer(UuidTimestampedModelSerializerMixin):
     class Meta(UuidTimestampedModelSerializerMixin.Meta):
         model = TileSet
         fields = UuidTimestampedModelSerializerMixin.Meta.fields + [
@@ -12,5 +12,12 @@ class TileSetSerializer(UuidTimestampedModelSerializerMixin):
             "tile_set_scheme",
             "tile_set_type",
             "date",
+        ]
+
+
+class TileSetSerializer(TileSetMinimalSerializer):
+    class Meta(TileSetMinimalSerializer.Meta):
+        model = TileSet
+        fields = TileSetMinimalSerializer.Meta.fields + [
             "geometry",
         ]

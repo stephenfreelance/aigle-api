@@ -38,6 +38,9 @@ ALLOWED_HOSTS = []
 
 # Application definition
 
+DOMAIN = os.environ.get("DOMAIN")
+SITE_NAME = os.environ.get("SITE_NAME", "Aigle")
+
 INSTALLED_APPS = [
     "django.contrib.admin",
     "django.contrib.auth",
@@ -54,7 +57,17 @@ INSTALLED_APPS = [
     "django_filters",
     "debug_toolbar",
 ]
+
+EMAIL_BACKEND = os.environ.get("EMAIL_BACKEND")
+EMAIL_HOST = os.environ.get("EMAIL_HOST")
+EMAIL_PORT = os.environ.get("EMAIL_PORT")
+EMAIL_USE_TLS = os.environ.get("EMAIL_USE_TLS")
+EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER")
+EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD")
+DEFAULT_FROM_EMAIL = os.environ.get("DEFAULT_FROM_EMAIL")
+
 DJOSER = {
+    "PASSWORD_RESET_CONFIRM_URL": "reset-password/{uid}/{token}",
     "LOGIN_FIELD": "email",
     "SERIALIZERS": {
         "current_user": "core.serializers.user.UserSerializer",

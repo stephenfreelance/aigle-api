@@ -68,7 +68,15 @@ I recommend to use an extension like [Requestly](https://chromewebstore.google.c
 Some commands need to be run to seed data necessary for the app to works well.
 
 ```
+# import collectivites
 python manage.py import_georegion
 python manage.py import_geodepartment
 python manage.py import_geocommune
+
+# insert tiles: for montpellier and its surroundings
+python manage.py create_tile --x-min 266604 --x-max 269158 --y-min 190594 --y-max 192162
 ```
+
+### Emails
+
+To send emails locally, you'll need to install local certificates, [here is how to do it in MacOS](https://korben.info/ssl-sslcertverificationerror-ssl-certificate_verify_failed-certificate-verify-failed-unable-to-get-local-issuer-certificate-_ssl-c1129.html)

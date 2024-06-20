@@ -1,7 +1,7 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 
-from core.contants.order_by import LAYERS_ORDER_BYS
+from core.contants.order_by import TILE_SETS_ORDER_BYS
 from core.models.object_type import ObjectType
 from core.models.tile_set import TileSet, TileSetStatus
 from core.serializers.map_settings import MapSettingsSerializer
@@ -15,7 +15,7 @@ class MapSettingsView(APIView):
             TileSet.objects.filter(
                 tile_set_status__in=[TileSetStatus.VISIBLE, TileSetStatus.HIDDEN]
             )
-            .order_by(*LAYERS_ORDER_BYS)
+            .order_by(*TILE_SETS_ORDER_BYS)
             .all()
         )
         serialized_tile_sets = TileSetSerializer(tile_sets, many=True).data
