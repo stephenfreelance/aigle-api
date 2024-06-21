@@ -7,6 +7,7 @@ from core.contants.order_by import TILE_SETS_ORDER_BYS
 from core.models.tile_set import TileSet, TileSetScheme, TileSetStatus, TileSetType
 from core.serializers.tile_set import TileSetSerializer
 from core.utils.filters import ChoiceInFilter
+from core.utils.permissions import AdminRoleModifyActionPermission
 
 
 class TileSetFilter(FilterSet):
@@ -29,6 +30,7 @@ class TileSetFilter(FilterSet):
 
 class TileSetViewSet(BaseViewSetMixin[TileSet]):
     filterset_class = TileSetFilter
+    permission_classes = [AdminRoleModifyActionPermission]
 
     def get_serializer_class(self):
         return TileSetSerializer
@@ -36,6 +38,3 @@ class TileSetViewSet(BaseViewSetMixin[TileSet]):
     def get_queryset(self):
         queryset = TileSet.objects.order_by(*TILE_SETS_ORDER_BYS)
         return queryset.distinct()
-
-    def get_serializer_context(self):
-        return {"request": self.request}

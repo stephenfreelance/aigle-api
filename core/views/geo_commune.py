@@ -5,6 +5,7 @@ from django.db.models import Q
 
 from core.models.geo_commune import GeoCommune
 from core.serializers.geo_commune import GeoCommuneSerializer
+from core.utils.permissions import AdminRolePermission
 
 
 class GeoCommuneFilter(FilterSet):
@@ -20,6 +21,7 @@ class GeoCommuneFilter(FilterSet):
 
 class GeoCommuneViewSet(BaseViewSetMixin[GeoCommune]):
     filterset_class = GeoCommuneFilter
+    permission_classes = [AdminRolePermission]
 
     def get_serializer_class(self):
         return GeoCommuneSerializer

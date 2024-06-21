@@ -6,6 +6,8 @@ from core.models.geo_region import GeoRegion
 from core.serializers.geo_region import GeoRegionDetailSerializer, GeoRegionSerializer
 from django_filters import FilterSet, CharFilter
 
+from core.utils.permissions import AdminRolePermission
+
 
 class GeoRegionFilter(FilterSet):
     q = CharFilter(method="search")
@@ -22,6 +24,7 @@ class GeoRegionFilter(FilterSet):
 
 class GeoRegionViewSet(BaseViewSetMixin[GeoRegion]):
     filterset_class = GeoRegionFilter
+    permission_classes = [AdminRolePermission]
 
     def get_serializer_class(self):
         if self.action == "retrieve":

@@ -9,6 +9,8 @@ from core.serializers.geo_department import (
 )
 from django_filters import FilterSet, CharFilter
 
+from core.utils.permissions import AdminRolePermission
+
 
 class GeoDepartmentFilter(FilterSet):
     q = CharFilter(method="search")
@@ -25,6 +27,7 @@ class GeoDepartmentFilter(FilterSet):
 
 class GeoDepartmentViewSet(BaseViewSetMixin[GeoDepartment]):
     filterset_class = GeoDepartmentFilter
+    permission_classes = [AdminRolePermission]
 
     def get_serializer_class(self):
         if self.action == "retrieve":

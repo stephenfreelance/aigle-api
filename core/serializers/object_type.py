@@ -1,9 +1,10 @@
-from typing import List, Optional
 from core.models.object_type import ObjectType
 from core.models.object_type_category import ObjectTypeCategory
 from core.serializers import UuidTimestampedModelSerializerMixin
 
 from rest_framework import serializers
+
+from core.serializers.utils.query import get_objects
 
 
 class ObjectTypeSerializer(UuidTimestampedModelSerializerMixin):
@@ -23,15 +24,19 @@ class ObjectTypeDetailSerializer(ObjectTypeSerializer):
 
 class ObjectTypeInputSerializer(ObjectTypeDetailSerializer):
     class Meta(ObjectTypeDetailSerializer.Meta):
-        fields = ["name", "color", "categories_uuids"]
+        fields = ["name", "color", "object_type_categories_uuids"]
 
-    categories_uuids = serializers.ListField(
+    object_type_categories_uuids = serializers.ListField(
         child=serializers.UUIDField(), required=False, allow_empty=True, write_only=True
     )
 
     def create(self, validated_data):
-        categories_uuids = validated_data.pop("categories_uuids", None)
-        categories = get_categories(categories_uuids=categories_uuids)
+        object_type_categories_uuids = validated_data.pop(
+            "object_type_categories_uuids", None
+        )
+        categories = get_objects(
+            uuids=object_type_categories_uuids, model=ObjectTypeCategory
+        )
 
         instance = ObjectType(**validated_data)
         instance.save()
@@ -39,16 +44,17 @@ class ObjectTypeInputSerializer(ObjectTypeDetailSerializer):
         if categories:
             instance.categories.set(categories)
 
-        for key, value in validated_data.items():
-            setattr(instance, key, value)
-
         instance.save()
 
         return instance
 
     def update(self, instance: ObjectTypeCategory, validated_data):
-        categories_uuids = validated_data.pop("categories_uuids", None)
-        categories = get_categories(categories_uuids=categories_uuids)
+        object_type_categories_uuids = validated_data.pop(
+            "object_type_categories_uuids", None
+        )
+        categories = get_objects(
+            uuids=object_type_categories_uuids, model=ObjectTypeCategory
+        )
 
         if categories is not None:
             instance.categories.set(categories)
@@ -59,23 +65,3 @@ class ObjectTypeInputSerializer(ObjectTypeDetailSerializer):
         instance.save()
 
         return instance
-
-
-def get_categories(categories_uuids: Optional[List[str]]):
-    if categories_uuids is None:
-        return None
-
-    # remove potential duplicates
-    categories_uuids = list(set(categories_uuids))
-    categories = ObjectTypeCategory.objects.filter(uuid__in=categories_uuids)
-
-    if len(categories_uuids) != len(categories):
-        uuids_not_found = list(
-            set(categories_uuids) - set([category.uuid for category in categories])
-        )
-
-        raise serializers.ValidationError(
-            f"Some categories were not found, uuids: {", ".join(uuids_not_found)}"
-        )
-
-    return categories

@@ -10,8 +10,11 @@ from core.views.user import UserViewSet
 from rest_framework.routers import DefaultRouter
 from django.urls import path
 
+from core.views.user_group import UserGroupViewSet
+
 router = DefaultRouter()
 router.register("users", UserViewSet, basename="UserViewSet")
+router.register("user-group", UserGroupViewSet, basename="UserGroupViewSet")
 
 router.register("geo/commune", GeoCommuneViewSet, basename="GeoCommuneViewSet")
 router.register("geo/department", GeoDepartmentViewSet, basename="GeoDepartmentViewSet")
