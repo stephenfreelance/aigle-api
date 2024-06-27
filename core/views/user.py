@@ -1,16 +1,13 @@
-from common.views.countable import CountableModelViewSetMixin
+from common.views.base import BaseViewSetMixin
 from core.models.user import UserRole
 from django_filters import FilterSet, CharFilter, OrderingFilter
-from rest_framework.viewsets import GenericViewSet
-from rest_framework.mixins import RetrieveModelMixin, ListModelMixin, UpdateModelMixin
-from common.views.deletable import DeletableModelViewSetMixin
 from django.contrib.auth import get_user_model
 
 from core.serializers.user import UserInputSerializer, UserSerializer
 
 
 from core.utils.filters import ChoiceInFilter
-from core.utils.permissions import AdminRolePermission
+from core.utils.permissions import MODIFY_ACTIONS, AdminRolePermission
 
 UserModel = get_user_model()
 
@@ -26,19 +23,14 @@ class UserFilter(FilterSet):
 
 
 class UserViewSet(
-    DeletableModelViewSetMixin[UserModel],
-    CountableModelViewSetMixin,
-    UpdateModelMixin,
-    RetrieveModelMixin,
-    ListModelMixin,
-    GenericViewSet,
+    BaseViewSetMixin[UserModel],
 ):
     lookup_field = "uuid"
     filterset_class = UserFilter
     permission_classes = [AdminRolePermission]
 
     def get_serializer_class(self):
-        if self.action == "update":
+        if self.action in MODIFY_ACTIONS:
             return UserInputSerializer
 
         return UserSerializer
@@ -47,6 +39,3 @@ class UserViewSet(
         queryset = UserModel.objects.order_by("-id")
 
         return queryset.distinct()
-
-    def get_serializer_context(self):
-        return {"request": self.request}

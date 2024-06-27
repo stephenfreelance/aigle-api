@@ -2,7 +2,7 @@ from core.models.geo_commune import GeoCommune
 from core.models.geo_department import GeoDepartment
 from core.models.geo_region import GeoRegion
 from core.models.object_type_category import ObjectTypeCategory
-from core.models.user_group import UserGroup
+from core.models.user_group import UserGroup, UserUserGroup
 from core.serializers import UuidTimestampedModelSerializerMixin
 from core.serializers.geo_commune import GeoCommuneSerializer
 from core.serializers.geo_department import GeoDepartmentSerializer
@@ -19,6 +19,12 @@ class UserGroupSerializer(UuidTimestampedModelSerializerMixin):
         model = UserGroup
         fields = UuidTimestampedModelSerializerMixin.Meta.fields + [
             "name",
+        ]
+
+
+class UserGroupDetailSerializer(UserGroupSerializer):
+    class Meta(UserGroupSerializer.Meta):
+        fields = UserGroupSerializer.Meta.fields + [
             "communes",
             "departments",
             "regions",
@@ -31,8 +37,8 @@ class UserGroupSerializer(UuidTimestampedModelSerializerMixin):
     object_type_categories = ObjectTypeCategorySerializer(many=True, read_only=True)
 
 
-class UserGroupInputSerializer(UserGroupSerializer):
-    class Meta(UserGroupSerializer.Meta):
+class UserGroupInputSerializer(UserGroupDetailSerializer):
+    class Meta(UserGroupDetailSerializer.Meta):
         fields = [
             "name",
             "communes_uuids",
@@ -128,3 +134,20 @@ class UserGroupInputSerializer(UserGroupSerializer):
         instance.save()
 
         return instance
+
+
+class UserUserGroupSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = UserUserGroup
+        fields = ["user_group_rights", "user_group"]
+
+    user_group = UserGroupSerializer()
+
+
+class UserUserGroupInputSerializer(UserUserGroupSerializer):
+    class Meta(UserUserGroupSerializer.Meta):
+        fields = ["user_group_rights", "user_group_uuid"]
+
+    user_group_uuid = serializers.UUIDField(
+        write_only=True,
+    )

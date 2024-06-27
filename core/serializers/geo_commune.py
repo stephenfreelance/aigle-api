@@ -13,3 +13,10 @@ class GeoCommuneSerializer(UuidTimestampedModelSerializerMixin):
         ]
 
     code = serializers.CharField(source="iso_code")
+
+
+class GeoCommuneDetailSerializer(GeoCommuneSerializer):
+    class Meta(GeoCommuneSerializer.Meta):
+        fields = GeoCommuneSerializer.Meta.fields + [
+            "geometry",
+        ]

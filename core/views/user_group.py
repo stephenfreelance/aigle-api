@@ -3,7 +3,10 @@ from django_filters import FilterSet, CharFilter
 
 
 from core.models.user_group import UserGroup
-from core.serializers.user_group import UserGroupInputSerializer, UserGroupSerializer
+from core.serializers.user_group import (
+    UserGroupInputSerializer,
+    UserGroupDetailSerializer,
+)
 from core.utils.permissions import AdminRoleModifyActionPermission
 
 
@@ -26,7 +29,7 @@ class UserGroupViewSet(BaseViewSetMixin[UserGroup]):
         if self.action in ["create", "partial_update", "update"]:
             return UserGroupInputSerializer
 
-        return UserGroupSerializer
+        return UserGroupDetailSerializer
 
     def get_queryset(self):
         queryset = UserGroup.objects.order_by("name")
