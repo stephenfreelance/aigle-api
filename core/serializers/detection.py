@@ -115,14 +115,11 @@ class DetectionInputSerializer(DetectionSerializer):
         tile_set_uuid = validated_data.pop("tile_set_uuid")
         tile_set = TileSet.objects.filter(
             uuid=tile_set_uuid,
-            geometry__contains=Centroid(validated_data["geometry"]),
         ).first()
 
         if not object_type:
             raise serializers.ValidationError(
-                f"Tile set with following uuid not found: {
-                    tile_set_uuid}"
-                " OR specified geometry is not within specified tile set"
+                f"Tile set with following uuid not found: {tile_set_uuid}"
             )
 
         detection_object = DetectionObject(**detection_object_data)

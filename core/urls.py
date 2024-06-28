@@ -1,5 +1,6 @@
 from core.views.detection import DetectionViewSet
 from core.views.geo_commune import GeoCommuneViewSet
+from core.views.geo_custom_zone import GeoCustomZoneViewSet
 from core.views.geo_department import GeoDepartmentViewSet
 from core.views.geo_region import GeoRegionViewSet
 from core.views.map_settings import MapSettingsView
@@ -19,6 +20,9 @@ router.register("user-group", UserGroupViewSet, basename="UserGroupViewSet")
 router.register("geo/commune", GeoCommuneViewSet, basename="GeoCommuneViewSet")
 router.register("geo/department", GeoDepartmentViewSet, basename="GeoDepartmentViewSet")
 router.register("geo/region", GeoRegionViewSet, basename="GeoRegionViewSet")
+router.register(
+    "geo/custom-zone", GeoCustomZoneViewSet, basename="GeoCustomZoneViewSet"
+)
 
 router.register("object-type", ObjectTypeViewSet, basename="ObjectTypeViewSet")
 router.register(
