@@ -6,7 +6,6 @@ from pyproj import Transformer
 
 from core.management.commands._common.file import download_file, extract_zip
 from core.models import GeoRegion
-from core.utils.string import normalize
 from django.contrib.gis.geos import GEOSGeometry
 
 SHP_ZIP_URL = (
@@ -71,9 +70,8 @@ class Command(BaseCommand):
 
             regions.append(
                 GeoRegion(
-                    name="new_" + normalize(properties["nom"]),
-                    display_name="new_" + properties["nom"],
-                    insee_code="new_" + properties["code_insee"],
+                    name=properties["nom"],
+                    insee_code=properties["code_insee"],
                     surface_km2=properties["surf_km2"],
                     geometry=geom,
                 )

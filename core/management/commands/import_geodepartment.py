@@ -83,8 +83,7 @@ class Command(BaseCommand):
             )
 
             department = GeoDepartment(
-                name=normalize(properties["nom"]),
-                display_name=properties["nom"],
+                name=properties["nom"],
                 insee_code=properties["code_insee"],
                 surface_km2=properties["surf_km2"],
                 geometry=geometry,

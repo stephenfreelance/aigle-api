@@ -9,7 +9,6 @@ class GeoRegionSerializer(UuidTimestampedModelSerializerMixin):
         model = GeoRegion
         fields = UuidTimestampedModelSerializerMixin.Meta.fields + [
             "name",
-            "display_name",
             "code",
             "surface_km2",
         ]

@@ -8,7 +8,6 @@ class GeoDepartmentSerializer(UuidTimestampedModelSerializerMixin):
         model = GeoDepartment
         fields = UuidTimestampedModelSerializerMixin.Meta.fields + [
             "name",
-            "display_name",
             "code",
             "surface_km2",
         ]

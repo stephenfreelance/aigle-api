@@ -7,7 +7,6 @@ from core.management.commands._common.file import (
 )
 from core.models.geo_commune import GeoCommune
 from core.models.geo_department import GeoDepartment
-from core.utils.string import normalize
 from django.contrib.gis.geos import GEOSGeometry
 
 FILE_JSON_URL = (
@@ -26,6 +25,12 @@ class Command(BaseCommand):
     help = "Import communes to database from JSON"
 
     def handle(self, *args, **options):
+        commune = GeoCommune(
+            name="test",
+        )
+        commune.save()
+        return
+
         data_communes: List[CommuneProperties] = download_json(FILE_JSON_URL)
 
         departments = GeoDepartment.objects.filter(
@@ -40,7 +45,7 @@ class Command(BaseCommand):
         communes = []
 
         for data_commune in data_communes:
-            display_name = data_commune["com_name"][0]
+            name = data_commune["com_name"][0]
             iso_code = data_commune["com_code"][0]
             geometry = GEOSGeometry(json.dumps(data_commune["geo_shape"]["geometry"]))
 
@@ -49,13 +54,12 @@ class Command(BaseCommand):
 
             if not department:
                 print(
-                    f"Department not found for code: {department_code}, skipping commune: {display_name}"
+                    f"Department not found for code: {department_code}, skipping commune: {name}"
                 )
                 continue
 
             commune = GeoCommune(
-                name=normalize(display_name),
-                display_name=display_name,
+                name=name,
                 iso_code=iso_code,
                 geometry=geometry,
                 department=department,
