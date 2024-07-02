@@ -25,7 +25,19 @@ class RegionProperties(TypedDict):
 class Command(BaseCommand):
     help = "Import regions to database from SHP"
 
+    def add_arguments(self, parser):
+        parser.add_argument("--insee-codes", action="append", required=False)
+
     def handle(self, *args, **options):
+        insee_codes = options["insee_codes"]
+
+        print("Starting importing regions...")
+
+        if insee_codes:
+            print(f"Insee codes: {', '.join(insee_codes)}")
+        else:
+            print("No insee codes provided, importing all regions")
+
         temp_dir, file_path = download_file(url=SHP_ZIP_URL, file_name="regions.zip")
 
         extract_folder_path = f"{temp_dir.name}/out"
@@ -38,10 +50,14 @@ class Command(BaseCommand):
         output_crs = "epsg:4326"
         transformer = Transformer.from_crs(input_crs, output_crs, always_xy=True)
 
-        regions = []
-
         for feature in shape.shapeRecords():
             properties: RegionProperties = feature.__geo_interface__["properties"]
+
+            insee_code = properties["code_insee"]
+
+            if insee_codes and insee_code not in insee_codes:
+                continue
+
             geometry = feature.__geo_interface__["geometry"]
 
             # Transform the geometry coordinates
@@ -67,16 +83,12 @@ class Command(BaseCommand):
             }
 
             geom = GEOSGeometry(json.dumps(transformed_geometry))
-
-            regions.append(
-                GeoRegion(
-                    name=properties["nom"],
-                    insee_code=properties["code_insee"],
-                    surface_km2=properties["surf_km2"],
-                    geometry=geom,
-                )
+            region = GeoRegion(
+                name=properties["nom"],
+                insee_code=properties["code_insee"],
+                surface_km2=properties["surf_km2"],
+                geometry=geom,
             )
-
-        GeoRegion.objects.bulk_create(regions)
+            region.save()
 
         temp_dir.cleanup()

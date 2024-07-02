@@ -28,8 +28,6 @@ class Command(BaseCommand):
         commune = GeoCommune(
             name="test",
         )
-        commune.save()
-        return
 
         data_communes: List[CommuneProperties] = download_json(FILE_JSON_URL)
 
@@ -41,8 +39,6 @@ class Command(BaseCommand):
         department_code_department_map = {
             department.insee_code: department for department in departments
         }
-
-        communes = []
 
         for data_commune in data_communes:
             name = data_commune["com_name"][0]
@@ -64,6 +60,4 @@ class Command(BaseCommand):
                 geometry=geometry,
                 department=department,
             )
-            communes.append(commune)
-
-        GeoCommune.objects.bulk_create(communes, batch_size=1000)
+            commune.save()

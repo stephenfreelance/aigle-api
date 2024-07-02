@@ -6,14 +6,8 @@ from common.models.deletable import DeletableModelMixin
 from common.models.timestamped import TimestampedModelMixin
 from common.models.uuid import UuidModelMixin
 
-from core.models.geo_commune import GeoCommune
-from core.models.geo_department import GeoDepartment
-from core.models.geo_region import GeoRegion
 
-
-from django.contrib.gis.db.models.aggregates import Union
-from django.db.models import Value
-from django.db.models.functions import Coalesce
+from core.models.geo_zone import GeoZone
 
 
 class TileSetStatus(models.TextChoices):
@@ -49,31 +43,4 @@ class TileSet(TimestampedModelMixin, UuidModelMixin, DeletableModelMixin):
         choices=TileSetType.choices,
     )
 
-    communes = models.ManyToManyField(GeoCommune, related_name="tile_sets")
-    departments = models.ManyToManyField(GeoDepartment, related_name="tile_sets")
-    regions = models.ManyToManyField(GeoRegion, related_name="tile_sets")
-
-    @property
-    def geometry(self):
-        communes_union = self.communes.aggregate(
-            combined=Coalesce(Union("geometry"), Value(None))
-        )["combined"]
-        departments_union = self.departments.aggregate(
-            combined=Coalesce(Union("geometry"), Value(None))
-        )["combined"]
-        regions_union = self.regions.aggregate(
-            combined=Coalesce(Union("geometry"), Value(None))
-        )["combined"]
-
-        all_unions = [
-            geom
-            for geom in [communes_union, departments_union, regions_union]
-            if geom is not None
-        ]
-        if all_unions:
-            final_union = all_unions[0]
-            for geom in all_unions[1:]:
-                final_union = final_union.union(geom)
-            return final_union
-
-        return None
+    geo_zones = models.ManyToManyField(GeoZone, related_name="tile_sets")

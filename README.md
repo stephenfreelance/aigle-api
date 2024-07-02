@@ -68,9 +68,14 @@ I recommend to use an extension like [Requestly](https://chromewebstore.google.c
 Some commands need to be run to seed data necessary for the app to works well.
 
 ```
-# import collectivites
+# import all collectivites
 python manage.py import_georegion
 python manage.py import_geodepartment
+python manage.py import_geocommune
+
+# import hérault
+python manage.py import_georegion --insee-codes 76
+python manage.py import_geodepartment --insee-codes 34
 python manage.py import_geocommune
 
 # insert tiles: for montpellier and its surroundings

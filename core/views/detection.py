@@ -3,7 +3,10 @@ from common.views.base import BaseViewSetMixin
 from operator import or_
 from django.db.models import Q
 from functools import reduce
-
+from django_filters import FilterSet
+from django_filters import (
+    NumberFilter,
+)
 from django.contrib.gis.db.models.functions import Centroid
 from core.contants.order_by import TILE_SETS_ORDER_BYS
 from core.models.detection import Detection
@@ -14,31 +17,73 @@ from core.serializers.detection import (
     DetectionMinimalSerializer,
     DetectionUpdateSerializer,
 )
-from core.utils.filters import GeoBoundsFilter, UuidInFilter
+from core.utils.filters import UuidInFilter
+from django.contrib.gis.geos import Polygon
+from django.contrib.gis.db.models.functions import Intersection
+
+from django.contrib.gis.db.models.aggregates import Union
+from django.db.models import Count
 
 
-class DetectionFilter(GeoBoundsFilter):
+class DetectionFilter(FilterSet):
     objectTypesUuids = UuidInFilter(method="search_object_types_uuids")
-    tileSetsUuids = UuidInFilter(method="search_tile_sets_uuids")
+    tileSetsUuids = UuidInFilter(method="pass_")
 
-    class Meta(GeoBoundsFilter.Meta):
+    neLat = NumberFilter(method="pass_")
+    neLng = NumberFilter(method="pass_")
+
+    swLat = NumberFilter(method="pass_")
+    swLng = NumberFilter(method="pass_")
+
+    def pass_(self, queryset, name, value):
+        return queryset
+
+    class Meta:
         model = Detection
-        fields = GeoBoundsFilter.Meta.fields + []
+        fields = ["neLat", "neLng", "swLat", "swLng", "tileSetsUuids"]
+        geo_field = "geometry"
 
     def search_tile_sets_uuids(self, queryset, name, value):
-        if not value:
+        return queryset
+
+    def filter_queryset(self, queryset):
+        queryset = super().filter_queryset(queryset)
+
+        tile_sets_uuids = (
+            self.data.get("tileSetsUuids").split(",")
+            if self.data.get("tileSetsUuids")
+            else []
+        )
+
+        # get geometry total
+
+        # geomtery requested
+
+        ne_lat = self.data.get("neLat")
+        ne_lng = self.data.get("neLng")
+        sw_lat = self.data.get("swLat")
+        sw_lng = self.data.get("swLng")
+
+        if not ne_lat or not ne_lng or not sw_lat or not sw_lng:
             return queryset
 
-        tile_sets_uuids = value
+        polygon_requested = Polygon.from_bbox((sw_lng, sw_lat, ne_lng, ne_lat))
+        polygon_requested.srid = 4326
 
-        tile_sets = (
-            TileSet.objects.filter(
-                uuid__in=tile_sets_uuids,
-                tile_set_type__in=[TileSetType.BACKGROUND, TileSetType.PARTIAL],
-            )
-            .order_by(*TILE_SETS_ORDER_BYS)
-            .all()
+        tile_sets = TileSet.objects
+        tile_sets = tile_sets.annotate(
+            union_geometry=Union("geo_zones__geometry"),
+            intersection=Intersection("union_geometry", polygon_requested),
+            geo_zones_count=Count("geo_zones"),
         )
+        tile_sets = tile_sets.filter(
+            uuid__in=tile_sets_uuids,
+            tile_set_type__in=[TileSetType.BACKGROUND, TileSetType.PARTIAL],
+        )
+        tile_sets = tile_sets.filter(
+            Q(intersection__isnull=False) | Q(geo_zones_count=0)
+        )
+        tile_sets = tile_sets.order_by(*TILE_SETS_ORDER_BYS).all()
 
         # Annotate the queryset with the centroid of the geometry
         queryset = queryset.annotate(centroid=Centroid("geometry"))
@@ -49,14 +94,23 @@ class DetectionFilter(GeoBoundsFilter):
             tile_set = tile_sets[i]
             previous_tile_sets = tile_sets[:i]
 
-            where = Q(tile_set__uuid=tile_set.uuid) & Q(
-                centroid__within=tile_set.geometry
-            )
+            if tile_set.intersection:
+                where = Q(tile_set__uuid=tile_set.uuid) & Q(
+                    centroid__intersects=tile_set.intersection
+                )
+            else:
+                where = Q(tile_set__uuid=tile_set.uuid) & Q(
+                    centroid__intersects=polygon_requested
+                )
 
             for previous_tile_set in previous_tile_sets:
-                where = where & ~Q(centroid__within=previous_tile_set.geometry)
+                where = where & ~Q(centroid__within=previous_tile_set.intersection)
 
             wheres.append(where)
+
+            # if no geometry, we can stop the loop
+            if not tile_set.intersection:
+                break
 
         if len(wheres) == 1:
             return queryset.filter(wheres[0])

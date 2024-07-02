@@ -7,6 +7,7 @@ from common.constants.models import DEFAULT_MAX_LENGTH
 from common.models.deletable import DeletableModelMixin
 from common.models.timestamped import TimestampedModelMixin
 from common.models.uuid import UuidModelMixin
+from core.utils.string import normalize
 
 
 class GeoZoneType(models.TextChoices):
@@ -16,8 +17,17 @@ class GeoZoneType(models.TextChoices):
     CUSTOM = "CUSTOM", "CUSTOM"
 
 
+GEO_CLASS_NAMES_GEO_ZONE_TYPES_MAP = {
+    "GeoCommune": GeoZoneType.COMMUNE,
+    "GeoDepartment": GeoZoneType.DEPARTMENT,
+    "GeoRegion": GeoZoneType.REGION,
+    "GeoCustomZone": GeoZoneType.CUSTOM,
+}
+
+
 class GeoZone(TimestampedModelMixin, UuidModelMixin, DeletableModelMixin):
     name = models.CharField(max_length=DEFAULT_MAX_LENGTH)
+    name_normalized = models.CharField(max_length=DEFAULT_MAX_LENGTH)
     geometry = models_gis.GeometryField()
     geo_zone_type = models.CharField(
         max_length=DEFAULT_MAX_LENGTH,
@@ -26,8 +36,13 @@ class GeoZone(TimestampedModelMixin, UuidModelMixin, DeletableModelMixin):
     )
 
     def save(self, *args, **kwargs):
-        self.type = self.__class__.__name__
-        import pdb
+        self.geo_zone_type = GEO_CLASS_NAMES_GEO_ZONE_TYPES_MAP.get(
+            self.__class__.__name__
+        )
 
-        pdb.set_trace()
+        if not self.geo_zone_type:
+            raise ValueError(f"Unknown type for class: {self.__class__.__name__}")
+
+        self.name_normalized = normalize(self.name)
+
         super().save(*args, **kwargs)

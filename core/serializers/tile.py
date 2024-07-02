@@ -5,4 +5,4 @@ from rest_framework import serializers
 class TileSerializer(serializers.ModelSerializer):
     class Meta:
         model = Tile
-        fields = ["x", "y", "z"]
+        fields = ["x", "y", "z", "geometry"]

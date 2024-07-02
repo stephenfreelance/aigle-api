@@ -1,6 +1,6 @@
 import json
 from typing import List, TypedDict
-from django.core.management.base import BaseCommand, CommandError
+from django.core.management.base import BaseCommand
 import shapefile
 
 from core.management.commands._common.file import (
@@ -40,9 +40,23 @@ class AdditionalInfos(TypedDict):
 class Command(BaseCommand):
     help = "Import departments to database from SHP"
 
+    def add_arguments(self, parser):
+        parser.add_argument("--insee-codes", action="append", required=False)
+
     def handle(self, *args, **options):
+        insee_codes = options["insee_codes"]
+
+        print("Starting importing departments...")
+
+        if insee_codes:
+            print(f"Insee codes: {', '.join(insee_codes)}")
+        else:
+            print("No insee codes provided, importing all departments")
+
         # shape data
-        temp_dir, file_path = download_file(url=SHP_ZIP_URL, file_name="regions.zip")
+        temp_dir, file_path = download_file(
+            url=SHP_ZIP_URL, file_name="departments.zip"
+        )
 
         extract_folder_path = f"{temp_dir.name}/out"
         extract_zip(file_path=file_path, output_dir=extract_folder_path)
@@ -53,26 +67,30 @@ class Command(BaseCommand):
         additional_data: List[AdditionalInfos] = download_json(url=ADDITIONAL_JSON_URL)
 
         regions = GeoRegion.objects.filter(
-            name__in=[normalize(data["region_name"]) for data in additional_data]
+            name_normalized__in=[
+                normalize(data["region_name"]) for data in additional_data
+            ]
         ).all()
 
-        region_name_region_map = {region.name: region for region in regions}
+        region_name_region_map = {region.name_normalized: region for region in regions}
 
         department_numero_region_map = {}
         for data_item in additional_data:
             region = region_name_region_map.get(normalize(data_item["region_name"]))
 
             if not region:
-                raise CommandError(
-                    f'Region was not found in database: {data_item['region_name']}. Did you import regions?'
-                )
+                continue
 
             department_numero_region_map[str(data_item["num_dep"])] = region
 
-        departments = []
-
         for feature in shape.shapeRecords():
             properties: RegionProperties = feature.__geo_interface__["properties"]
+
+            insee_code = properties["code_insee"]
+
+            if insee_codes and insee_code not in insee_codes:
+                continue
+
             geometry = GEOSGeometry(json.dumps(feature.__geo_interface__["geometry"]))
 
             # special case for 69
@@ -90,8 +108,6 @@ class Command(BaseCommand):
                 region=department_numero_region_map[code_insee_simplified],
             )
 
-            departments.append(department)
-
-        GeoDepartment.objects.bulk_create(departments)
+            department.save()
 
         temp_dir.cleanup()

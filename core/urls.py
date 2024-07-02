@@ -1,4 +1,6 @@
 from core.views.detection import DetectionViewSet
+from core.views.detection_data import DetectionDataViewSet
+from core.views.detection_object import DetectionObjectViewSet
 from core.views.geo_commune import GeoCommuneViewSet
 from core.views.geo_custom_zone import GeoCustomZoneViewSet
 from core.views.geo_department import GeoDepartmentViewSet
@@ -34,6 +36,10 @@ router.register(
 router.register("tile-set", TileSetViewSet, basename="TileSetViewSet")
 
 router.register("detection", DetectionViewSet, basename="DetectionViewSet")
+router.register(
+    "detection-object", DetectionObjectViewSet, basename="DetectionObjectViewSet"
+)
+router.register("detection-data", DetectionDataViewSet, basename="DetectionDataViewSet")
 
 urlpatterns = router.urls
 urlpatterns += [

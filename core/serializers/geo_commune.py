@@ -8,7 +8,6 @@ class GeoCommuneSerializer(UuidTimestampedModelSerializerMixin):
         model = GeoCommune
         fields = UuidTimestampedModelSerializerMixin.Meta.fields + [
             "name",
-            "display_name",
             "code",
         ]
 

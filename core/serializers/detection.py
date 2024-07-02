@@ -26,12 +26,12 @@ class DetectionMinimalSerializer(
         model = Detection
         geo_field = "geometry"
         fields = [
-            "id",
             "uuid",
             "object_type_uuid",
             "object_type_color",
             "detection_control_status",
             "detection_validation_status",
+            "detection_object_uuid",
         ]
 
     object_type_uuid = serializers.CharField(source="detection_object.object_type.uuid")
@@ -46,6 +46,7 @@ class DetectionMinimalSerializer(
         source="detection_data.detection_validation_status",
         choices=DetectionValidationStatus.choices,
     )
+    detection_object_uuid = serializers.CharField(source="detection_object.uuid")
 
 
 class DetectionSerializer(UuidTimestampedModelSerializerMixin):
@@ -54,7 +55,6 @@ class DetectionSerializer(UuidTimestampedModelSerializerMixin):
     class Meta(UuidTimestampedModelSerializerMixin.Meta):
         model = Detection
         fields = UuidTimestampedModelSerializerMixin.Meta.fields + [
-            "id",
             "geometry",
             "score",
             "detection_source",
@@ -64,19 +64,26 @@ class DetectionSerializer(UuidTimestampedModelSerializerMixin):
     detection_data = DetectionDataSerializer(read_only=True)
 
 
-class DetectionDetailSerializer(DetectionSerializer):
-    from core.serializers.detection_object import DetectionObjectSerializer
-
+class DetectionWithTileSerializer(DetectionSerializer):
     class Meta(DetectionSerializer.Meta):
         fields = DetectionSerializer.Meta.fields + [
-            "detection_object",
             "tile",
             "tile_set",
         ]
 
-    detection_object = DetectionObjectSerializer(read_only=True)
     tile = TileSerializer(read_only=True)
     tile_set = TileSetMinimalSerializer(read_only=True)
+
+
+class DetectionDetailSerializer(DetectionWithTileSerializer):
+    from core.serializers.detection_object import DetectionObjectSerializer
+
+    class Meta(DetectionWithTileSerializer.Meta):
+        fields = DetectionWithTileSerializer.Meta.fields + [
+            "detection_object",
+        ]
+
+    detection_object = DetectionObjectSerializer(read_only=True)
 
 
 class DetectionInputSerializer(DetectionSerializer):
@@ -135,8 +142,8 @@ class DetectionInputSerializer(DetectionSerializer):
         else:
             # default value
             detection_data = DetectionData(
-                detection_control_status=DetectionControlStatus.NO_CONTROL,
-                detection_validation_status=DetectionValidationStatus.SUSPECT,
+                detection_control_status=DetectionControlStatus.DETECTED,
+                detection_validation_status=DetectionValidationStatus.DETECTED_NOT_VERIFIED,
             )
 
         detection_data.user_last_update = self.context["request"].user
