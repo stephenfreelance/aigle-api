@@ -17,7 +17,7 @@ djangorestframework-gis==1.0
 djangorestframework-simplejwt==5.3.1
 djoser==2.2.2
 filelock==3.14.0
-GDAL==3.9.0
+GDAL==3.4.1
 identify==2.5.36
 idna==3.7
 Markdown==3.6
