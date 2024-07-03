@@ -1,2 +1,1 @@
-release: python manage.py migrate
-web: gunicorn aigle.wsgi
+web: python manage.py migrate && gunicorn aigle.wsgi
