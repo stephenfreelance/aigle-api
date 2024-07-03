@@ -47,24 +47,24 @@ class DetectionObjectDetailSerializer(DetectionObjectSerializer):
 
         if not tile_sets:
             return []
-
-        # get at least 6 years old
+        
+        tile_sets_map = {}
         tile_set_six_years = (
             get_tile_set_years_ago(tile_sets=tile_sets, relative_years=6)
             or tile_sets[len(tile_sets) - 1]
         )
-        tile_set_three_years = (
-            get_tile_set_years_ago(tile_sets=tile_sets, relative_years=3)
-            or tile_sets[len(tile_sets) - 1]
-        )
-        tile_set_most_recent = tile_sets[0]
+        tile_sets_map[tile_set_six_years.id] = tile_set_six_years
+
+        # append most recent
+        tile_sets_map[tile_sets[0].id] = tile_sets[0]
+        
+        for tile_set in tile_sets:
+            if not tile_sets_map.get(tile_set.id):
+                tile_sets_map[tile_set.id] = tile_set
+                break
 
         tile_sets_serialized = TileSetMinimalSerializer(
-            data=[
-                tile_set_six_years,
-                tile_set_three_years,
-                tile_set_most_recent,
-            ],
+            data=list(sorted(tile_sets_map.values(), key=lambda t: t.date)),
             many=True,
         )
         tile_sets_serialized.is_valid()
