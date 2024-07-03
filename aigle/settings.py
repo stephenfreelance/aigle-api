@@ -17,12 +17,6 @@ from pathlib import Path
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# GDAL_LIBRARY_PATH = os.environ.get(
-#     "GDAL_LIBRARY_PATH", "/opt/homebrew/opt/gdal/lib/libgdal.dylib"
-# )
-# GEOS_LIBRARY_PATH = os.environ.get(
-#     "GEOS_LIBRARY_PATH", "/opt/homebrew/opt/geos/lib/libgeos_c.dylib"
-# )
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
@@ -31,7 +25,14 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = "django-insecure-tz2s%wy_1typ8a6nh=(a51f64uknqo__79+0c^zi&y3q@b1!4$"
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = bool(os.environ.get("DEBUG", 0))
+if os.environ.get("ENVIRONMENT") == "development":
+    GDAL_LIBRARY_PATH = os.environ.get(
+        "GDAL_LIBRARY_PATH", "/opt/homebrew/opt/gdal/lib/libgdal.dylib"
+    )
+    GEOS_LIBRARY_PATH = os.environ.get(
+        "GEOS_LIBRARY_PATH", "/opt/homebrew/opt/geos/lib/libgeos_c.dylib"
+    )
 
 ALLOWED_HOSTS = []
 

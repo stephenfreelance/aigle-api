@@ -103,7 +103,7 @@ class UserGroupInputSerializer(UserGroupDetailSerializer):
 
         instance.save()
 
-        zones = communes + departments + regions
+        zones = list(communes) + list(departments) + list(regions)
 
         if zones:
             instance.geo_zones.set(zones)

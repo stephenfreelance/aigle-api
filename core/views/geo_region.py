@@ -11,6 +11,8 @@ from core.utils.permissions import AdminRolePermission
 from django.db.models import Case, IntegerField, Value, When
 from django.db.models.functions import Length
 
+from core.utils.string import normalize
+
 
 class GeoRegionFilter(FilterSet):
     q = CharFilter(method="search")
@@ -20,19 +22,22 @@ class GeoRegionFilter(FilterSet):
         fields = ["q"]
 
     def search(self, queryset, name, value):
+        value_normalized = normalize(value)
+
         queryset = queryset.annotate(
             match_score=Case(
-                When(name__iexact=value, then=Value(4)),
-                When(insee_code__iexact=value, then=Value(3)),
-                When(name__icontains=value, then=Value(2)),
-                When(insee_code__icontains=value, then=Value(1)),
+                When(name_normalized__iexact=value_normalized, then=Value(4)),
+                When(insee_code__iexact=value_normalized, then=Value(3)),
+                When(name_normalized__icontains=value_normalized, then=Value(2)),
+                When(insee_code__icontains=value_normalized, then=Value(1)),
                 default=Value(0),
                 output_field=IntegerField(),
             )
         )
 
         return queryset.filter(
-            Q(name__icontains=value) | Q(insee_code__icontains=value)
+            Q(name_normalized__icontains=value_normalized)
+            | Q(insee_code__icontains=value_normalized)
         ).order_by("-match_score", Length("name"))
 
 
