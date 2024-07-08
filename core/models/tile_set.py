@@ -5,6 +5,7 @@ from common.constants.models import DEFAULT_MAX_LENGTH
 from common.models.deletable import DeletableModelMixin
 from common.models.timestamped import TimestampedModelMixin
 from common.models.uuid import UuidModelMixin
+from django.core.validators import MinValueValidator
 
 
 from core.models.geo_zone import GeoZone
@@ -42,5 +43,7 @@ class TileSet(TimestampedModelMixin, UuidModelMixin, DeletableModelMixin):
         max_length=DEFAULT_MAX_LENGTH,
         choices=TileSetType.choices,
     )
+    min_zoom = models.IntegerField(validators=[MinValueValidator(0)], null=True)
+    max_zoom = models.IntegerField(validators=[MinValueValidator(0)], null=True)
 
     geo_zones = models.ManyToManyField(GeoZone, related_name="tile_sets")

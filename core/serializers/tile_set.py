@@ -24,6 +24,8 @@ class TileSetMinimalSerializer(UuidTimestampedModelSerializerMixin):
             "tile_set_scheme",
             "tile_set_type",
             "date",
+            "min_zoom",
+            "max_zoom",
         ]
 
 
@@ -88,6 +90,8 @@ class TileSetInputSerializer(TileSetSerializer):
             "communes_uuids",
             "departments_uuids",
             "regions_uuids",
+            "min_zoom",
+            "max_zoom",
         ]
 
     communes_uuids = serializers.ListField(

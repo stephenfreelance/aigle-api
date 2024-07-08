@@ -10,7 +10,11 @@ from django.contrib.gis.db.models.aggregates import Union
 
 
 def get_user_tile_sets(
-    user, filter_tile_set_status__in=None, filter_tile_set_type__in=None, order_bys=None
+    user,
+    filter_tile_set_status__in=None,
+    filter_tile_set_type__in=None,
+    filter_tile_set_contains_point=None,
+    order_bys=None,
 ):
     if filter_tile_set_status__in is None:
         filter_tile_set_status__in = [TileSetStatus.VISIBLE, TileSetStatus.HIDDEN]
@@ -50,8 +54,12 @@ def get_user_tile_sets(
         geo_zones_count=Count("geo_zones"),
     )
 
-    tile_sets = tile_sets.filter(
-        Q(intersection__isnull=False) | Q(geo_zones_count=0)
-    ).distinct()
+    tile_sets = tile_sets.filter(Q(intersection__isnull=False) | Q(geo_zones_count=0))
 
-    return tile_sets
+    if filter_tile_set_contains_point:
+        tile_sets = tile_sets.filter(
+            Q(intersection__contains=filter_tile_set_contains_point)
+            | Q(geo_zones_count=0)
+        )
+
+    return tile_sets.distinct()

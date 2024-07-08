@@ -21,10 +21,13 @@ class DetectionSource(models.TextChoices):
 
 class Detection(TimestampedModelMixin, UuidModelMixin, DeletableModelMixin):
     geometry = models_gis.GeometryField()
-    score = models.FloatField(validators=[MinValueValidator(0), MaxValueValidator(1)])
+    score = models.FloatField(
+        validators=[MinValueValidator(0), MaxValueValidator(1)], default=1
+    )
     detection_source = models.CharField(
         max_length=DEFAULT_MAX_LENGTH,
         choices=DetectionSource.choices,
+        default=DetectionSource.INTERFACE_DRAWN,
     )
     detection_object = models.ForeignKey(
         DetectionObject, related_name="detections", on_delete=models.CASCADE

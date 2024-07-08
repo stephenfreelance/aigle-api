@@ -11,6 +11,7 @@ from core.views.object_type_category import ObjectTypeCategoryViewSet
 from core.views.tile_set import TileSetViewSet
 from core.views.user import UserViewSet
 from rest_framework.routers import DefaultRouter
+from core.views.utils import urls as utils_urls
 from django.urls import path
 
 from core.views.user_group import UserGroupViewSet
@@ -42,6 +43,8 @@ router.register(
 router.register("detection-data", DetectionDataViewSet, basename="DetectionDataViewSet")
 
 urlpatterns = router.urls
+
 urlpatterns += [
     path("map-settings/", MapSettingsView.as_view(), name="MapSettingsView")
 ]
+urlpatterns += utils_urls

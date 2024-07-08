@@ -35,6 +35,11 @@ class GeoZone(TimestampedModelMixin, UuidModelMixin, DeletableModelMixin):
         editable=False,
     )
 
+    class Meta:
+        indexes = [
+            models.Index(fields=["id"], name="idx_geozone_id"),
+        ]
+
     def save(self, *args, **kwargs):
         self.geo_zone_type = GEO_CLASS_NAMES_GEO_ZONE_TYPES_MAP.get(
             self.__class__.__name__

@@ -24,11 +24,6 @@ class MapSettingsView(APIView):
     def get(self, request, format=None):
         setting_tile_sets = []
         object_types = []
-        user_group_rights = [
-            UserGroupRight.WRITE,
-            UserGroupRight.ANNOTATE,
-            UserGroupRight.READ,
-        ]
 
         # super admin has access to all tile sets and all object types
         if request.user.user_role == UserRole.SUPER_ADMIN:
@@ -47,22 +42,15 @@ class MapSettingsView(APIView):
             object_types_serialized.is_valid()
             object_types = object_types_serialized.data
 
-            user_group_rights = [
-                UserGroupRight.WRITE,
-                UserGroupRight.ANNOTATE,
-                UserGroupRight.READ,
-            ]
-
             for tile_set in tile_sets:
                 setting_tile_set = MapSettingTileSetSerializer(
                     data={
                         "tile_set": TileSetMinimalSerializer(tile_set).data,
-                        "user_group_rights": user_group_rights,
-                        "geometry": json.loads(
-                            GEOSGeometry(tile_set.intersection).geojson
-                        )
-                        if tile_set.intersection
-                        else None,
+                        "geometry": (
+                            json.loads(GEOSGeometry(tile_set.intersection).geojson)
+                            if tile_set.intersection
+                            else None
+                        ),
                     }
                 )
                 setting_tile_sets.append(setting_tile_set.initial_data)
@@ -74,12 +62,11 @@ class MapSettingsView(APIView):
                 setting_tile_set = MapSettingTileSetSerializer(
                     data={
                         "tile_set": TileSetMinimalSerializer(tile_set).data,
-                        "geometry": json.loads(
-                            GEOSGeometry(tile_set.intersection).geojson
-                        )
-                        if tile_set.intersection
-                        else None,
-                        "user_group_rights": user_group_rights,
+                        "geometry": (
+                            json.loads(GEOSGeometry(tile_set.intersection).geojson)
+                            if tile_set.intersection
+                            else None
+                        ),
                     }
                 )
 

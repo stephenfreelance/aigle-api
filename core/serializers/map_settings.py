@@ -8,7 +8,6 @@ from django.contrib.gis.db import models as models_gis
 class MapSettingTileSetSerializer(serializers.Serializer):
     tile_set = TileSetMinimalSerializer()
     geometry = models_gis.GeometryField()
-    user_group_rights = serializers.ListField(child=serializers.CharField())
 
 
 class MapSettingsSerializer(serializers.Serializer):

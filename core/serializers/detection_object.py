@@ -3,8 +3,13 @@ from typing import List, Optional
 from core.models.detection_object import DetectionObject
 from core.models.object_type import ObjectType
 from core.models.tile_set import TileSet, TileSetType
+from core.models.user import UserRole
+from core.models.user_group import UserGroupRight
 from core.serializers import UuidTimestampedModelSerializerMixin
+from django.contrib.gis.db.models.aggregates import Union
+from django.contrib.gis.db.models.functions import Centroid
 
+from core.serializers.detection import DetectionMinimalSerializer, DetectionSerializer, DetectionWithTileMinimalSerializer, DetectionWithTileSerializer
 from core.serializers.object_type import ObjectTypeSerializer
 from rest_framework import serializers
 
@@ -23,6 +28,51 @@ class DetectionObjectSerializer(UuidTimestampedModelSerializerMixin):
 
     object_type = ObjectTypeSerializer(read_only=True)
 
+class DetectionHistorySerializer(serializers.Serializer):
+    tile_set = TileSetMinimalSerializer(read_only=True)
+    detection = DetectionWithTileMinimalSerializer(read_only=True, required=False)
+
+class DetectionObjectHistorySerializer(DetectionObjectSerializer):
+    class Meta(DetectionObjectSerializer.Meta):
+        fields = DetectionObjectSerializer.Meta.fields + [
+            "id",
+            "detections",
+        ]
+
+    detections = serializers.SerializerMethodField()
+
+    def get_detections(self, obj: DetectionObject):
+        user = self.context["request"].user
+        detections = obj.detections.all()
+        tile_sets = get_user_tile_sets(
+            user=user,
+            filter_tile_set_type__in=[TileSetType.PARTIAL, TileSetType.BACKGROUND],
+            order_bys=["-date"],
+            filter_tile_set_contains_point=Centroid(detections[0].geometry)
+        )
+
+        if not tile_sets:
+            return []
+        
+        detection_history = []
+        tile_set_id_detection_map = {
+            detection.tile_set.id: detection for detection in detections
+        }
+
+        for tile_set in list(sorted(tile_sets, key=lambda t: t.date)):
+            detection = tile_set_id_detection_map.get(tile_set.id, None)
+
+            history = DetectionHistorySerializer(data={
+                "tile_set": TileSetMinimalSerializer(tile_set).data,
+                "detection": DetectionWithTileMinimalSerializer(detection).data if detection else None
+            })
+            detection_history.append(history.initial_data)
+        
+        return detection_history
+
+class DetectionObjectTileSetPreview(serializers.Serializer):
+    preview = serializers.BooleanField()
+    tile_set = TileSetMinimalSerializer()
 
 class DetectionObjectDetailSerializer(DetectionObjectSerializer):
     from core.serializers.detection import DetectionWithTileSerializer
@@ -31,18 +81,21 @@ class DetectionObjectDetailSerializer(DetectionObjectSerializer):
         fields = DetectionObjectSerializer.Meta.fields + [
             "id",
             "detections",
-            "tile_sets_previews",
+            "tile_sets",
+            "user_group_rights"
         ]
 
     detections = DetectionWithTileSerializer(many=True)
-    tile_sets_previews = serializers.SerializerMethodField()
+    tile_sets = serializers.SerializerMethodField()
+    user_group_rights = serializers.SerializerMethodField()
 
-    def get_tile_sets_previews(self, obj):
+    def get_tile_sets(self, obj: DetectionObject):
         user = self.context["request"].user
         tile_sets = get_user_tile_sets(
             user=user,
             filter_tile_set_type__in=[TileSetType.PARTIAL, TileSetType.BACKGROUND],
             order_bys=["-date"],
+            filter_tile_set_contains_point=Centroid(obj.detections.all()[0].geometry)
         )
 
         if not tile_sets:
@@ -62,14 +115,41 @@ class DetectionObjectDetailSerializer(DetectionObjectSerializer):
             if not tile_sets_map.get(tile_set.id):
                 tile_sets_map[tile_set.id] = tile_set
                 break
+        
+        tile_set_previews = []
 
-        tile_sets_serialized = TileSetMinimalSerializer(
-            data=list(sorted(tile_sets_map.values(), key=lambda t: t.date)),
-            many=True,
+        for tile_set in sorted(tile_sets, key=lambda t: t.date):
+            preview = DetectionObjectTileSetPreview(data={
+                "tile_set": TileSetMinimalSerializer(tile_set).data,
+                "preview": True if tile_sets_map.get(tile_set.id) else False
+            })
+            tile_set_previews.append(preview.initial_data)
+
+        return tile_set_previews
+
+    def get_user_group_rights(self, obj: DetectionObject):
+        user = self.context["request"].user
+
+        if user.user_role == UserRole.SUPER_ADMIN:
+            return [
+                UserGroupRight.WRITE,
+                UserGroupRight.ANNOTATE,
+                UserGroupRight.READ,
+            ]
+
+        user_user_groups = user.user_user_groups.annotate(
+            union_geometry=Union("user_group__geo_zones__geometry")
         )
-        tile_sets_serialized.is_valid()
-        return tile_sets_serialized.data
+        user_user_groups = user_user_groups.filter(
+            union_geometry__contains=Centroid(obj.detections.first().geometry)
+        )
 
+        user_group_rights = set()
+
+        for user_user_group in user_user_groups:
+            user_group_rights.update(user_user_group.user_group_rights)
+
+        return list(user_group_rights)
 
 class DetectionObjectInputSerializer(DetectionObjectSerializer):
     class Meta(DetectionObjectSerializer.Meta):
