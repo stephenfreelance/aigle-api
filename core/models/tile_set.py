@@ -47,3 +47,10 @@ class TileSet(TimestampedModelMixin, UuidModelMixin, DeletableModelMixin):
     max_zoom = models.IntegerField(validators=[MinValueValidator(0)], null=True)
 
     geo_zones = models.ManyToManyField(GeoZone, related_name="tile_sets")
+
+    class Meta:
+        indexes = [
+            models.Index(fields=["tile_set_status"]),
+            models.Index(fields=["tile_set_type"]),
+            models.Index(fields=["date"]),
+        ]

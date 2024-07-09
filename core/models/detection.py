@@ -45,3 +45,11 @@ class Detection(TimestampedModelMixin, UuidModelMixin, DeletableModelMixin):
     tile_set = models.ForeignKey(
         TileSet, related_name="detections", on_delete=models.CASCADE
     )
+
+    class Meta:
+        indexes = [
+            models.Index(fields=["created_at"]),
+            models.Index(fields=["uuid"]),
+            models.Index(fields=["detection_source"]),
+            models.Index(fields=["detection_object", "detection_data"]),
+        ]

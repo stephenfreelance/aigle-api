@@ -1,4 +1,4 @@
-from core.models.detection import Detection, DetectionSource
+from core.models.detection import Detection
 from core.models.detection_data import (
     DetectionControlStatus,
     DetectionData,
@@ -72,6 +72,7 @@ class DetectionWithTileMinimalSerializer(DetectionSerializer):
 
     tile = TileSerializer(read_only=True)
 
+
 class DetectionWithTileSerializer(DetectionWithTileMinimalSerializer):
     class Meta(DetectionWithTileMinimalSerializer.Meta):
         fields = DetectionWithTileMinimalSerializer.Meta.fields + [
@@ -96,7 +97,13 @@ class DetectionInputSerializer(DetectionSerializer):
     from core.serializers.detection_object import DetectionObjectInputSerializer
 
     class Meta(DetectionSerializer.Meta):
-        fields = ["geometry", "detection_data", "detection_object", "detection_object_uuid", "tile_set_uuid"]
+        fields = [
+            "geometry",
+            "detection_data",
+            "detection_object",
+            "detection_object_uuid",
+            "tile_set_uuid",
+        ]
 
     detection_object = DetectionObjectInputSerializer(required=False)
     detection_data = DetectionDataInputSerializer(required=False)
@@ -107,7 +114,7 @@ class DetectionInputSerializer(DetectionSerializer):
         # create or retrieve detection object
 
         detection_object_uuid = validated_data.pop("detection_object_uuid", None)
-        
+
         tile_set_uuid = validated_data.pop("tile_set_uuid")
         tile_set = None
 
@@ -120,20 +127,21 @@ class DetectionInputSerializer(DetectionSerializer):
                 raise serializers.ValidationError(
                     f"Tile set with following uuid not found: {tile_set_uuid}"
                 )
-    
+
         tile = Tile.objects.filter(
             geometry__contains=Centroid(validated_data["geometry"]), z=TILE_DEFAULT_ZOOM
         ).first()
 
         if not tile:
             raise serializers.ValidationError("Tile not found for specified geometry")
-            
 
         if not detection_object_uuid:
             detection_object_data = validated_data.pop("detection_object", None)
 
             if not detection_object_data:
-                raise serializers.ValidationError("detectionObjectUuid or detectionObject must be specified")
+                raise serializers.ValidationError(
+                    "detectionObjectUuid or detectionObject must be specified"
+                )
 
             object_type_uuid = detection_object_data.pop("object_type_uuid")
             object_type = ObjectType.objects.filter(uuid=object_type_uuid).first()
@@ -149,15 +157,16 @@ class DetectionInputSerializer(DetectionSerializer):
             detection_object = DetectionObject(**detection_object_data)
             detection_object.object_type = object_type
             detection_object.save()
-        
+
         if detection_object_uuid:
-            detection_object = DetectionObject.objects.filter(uuid=detection_object_uuid).first()
+            detection_object = DetectionObject.objects.filter(
+                uuid=detection_object_uuid
+            ).first()
 
             if not detection_object:
                 raise serializers.ValidationError(
                     f"Detection object with following uuid not found: {detection_object_uuid}"
                 )
-
 
         # create detection data
 
@@ -181,13 +190,13 @@ class DetectionInputSerializer(DetectionSerializer):
 
         instance.detection_object = detection_object
         instance.detection_data = detection_data
-        
+
         if tile_set:
             instance.tile_set = tile_set
-        
+
         if tile:
             instance.tile = tile
-        
+
         instance.save()
 
         return instance

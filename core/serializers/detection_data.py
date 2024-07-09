@@ -1,5 +1,4 @@
 from core.models.detection_data import DetectionData
-from core.models.detection_object import DetectionObject
 from core.serializers import UuidTimestampedModelSerializerMixin
 
 from rest_framework import serializers

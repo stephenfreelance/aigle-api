@@ -6,7 +6,6 @@ from core.contants.order_by import TILE_SETS_ORDER_BYS
 from core.models.object_type import ObjectType
 from core.models.tile_set import TileSet, TileSetStatus
 from core.models.user import UserRole
-from core.models.user_group import UserGroupRight
 from core.serializers.map_settings import (
     MapSettingsSerializer,
     MapSettingTileSetSerializer,
@@ -81,8 +80,7 @@ class MapSettingsView(APIView):
                 object_types_serialized = ObjectTypeSerializer(
                     data=object_types_objects, many=True
                 )
-                object_types_serialized.is_valid()
-                object_types = object_types_serialized.data
+                object_types = object_types_serialized.initial_data
 
         setting = MapSettingsSerializer(
             data={
@@ -91,6 +89,4 @@ class MapSettingsView(APIView):
             }
         )
 
-        setting.is_valid()
-
-        return Response(setting.data)
+        return Response(setting.initial_data)

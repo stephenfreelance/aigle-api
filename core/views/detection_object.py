@@ -27,6 +27,13 @@ class DetectionObjectViewSet(BaseViewSetMixin[DetectionObject]):
 
     def get_queryset(self):
         queryset = DetectionObject.objects.order_by("-detections__tile_set__date")
+        queryset = queryset.prefetch_related(
+            "detections",
+            "detections__tile",
+            "detections__tile_set",
+            "detections__detection_data",
+            "object_type",
+        )
         return queryset.distinct()
 
     @action(methods=["get"], detail=True)
