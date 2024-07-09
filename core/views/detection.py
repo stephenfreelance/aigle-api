@@ -10,6 +10,7 @@ from django_filters import (
 from django.contrib.gis.db.models.functions import Centroid
 from core.contants.order_by import TILE_SETS_ORDER_BYS
 from core.models.detection import Detection
+from core.models.detection_data import DetectionControlStatus, DetectionValidationStatus
 from core.models.tile_set import TileSet, TileSetType
 from core.serializers.detection import (
     DetectionDetailSerializer,
@@ -17,7 +18,7 @@ from core.serializers.detection import (
     DetectionMinimalSerializer,
     DetectionUpdateSerializer,
 )
-from core.utils.filters import UuidInFilter
+from core.utils.filters import ChoiceInFilter, UuidInFilter
 from django.contrib.gis.geos import Polygon
 from django.contrib.gis.db.models.functions import Intersection
 
@@ -28,6 +29,14 @@ from django.db.models import Count
 class DetectionFilter(FilterSet):
     objectTypesUuids = UuidInFilter(method="search_object_types_uuids")
     tileSetsUuids = UuidInFilter(method="pass_")
+    detectionValidationStatuses = ChoiceInFilter(
+        field_name="detection_data__detection_validation_status",
+        choices=DetectionValidationStatus.choices,
+    )
+    detectionControlStatuses = ChoiceInFilter(
+        field_name="detection_data__detection_control_status",
+        choices=DetectionControlStatus.choices,
+    )
 
     neLat = NumberFilter(method="pass_")
     neLng = NumberFilter(method="pass_")

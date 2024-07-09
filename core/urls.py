@@ -8,6 +8,7 @@ from core.views.geo_region import GeoRegionViewSet
 from core.views.map_settings import MapSettingsView
 from core.views.object_type import ObjectTypeViewSet
 from core.views.object_type_category import ObjectTypeCategoryViewSet
+from core.views.parcel import ParcelViewSet
 from core.views.tile_set import TileSetViewSet
 from core.views.user import UserViewSet
 from rest_framework.routers import DefaultRouter
@@ -26,6 +27,8 @@ router.register("geo/region", GeoRegionViewSet, basename="GeoRegionViewSet")
 router.register(
     "geo/custom-zone", GeoCustomZoneViewSet, basename="GeoCustomZoneViewSet"
 )
+
+router.register("parcel", ParcelViewSet, basename="ParcelViewSet")
 
 router.register("object-type", ObjectTypeViewSet, basename="ObjectTypeViewSet")
 router.register(

@@ -6,6 +6,7 @@ from core.models.detection_data import (
 )
 from core.models.detection_object import DetectionObject
 from core.models.object_type import ObjectType
+from core.models.parcel import Parcel
 from core.models.tile import TILE_DEFAULT_ZOOM, Tile
 from core.models.tile_set import TileSet
 from core.serializers import UuidTimestampedModelSerializerMixin
@@ -128,8 +129,10 @@ class DetectionInputSerializer(DetectionSerializer):
                     f"Tile set with following uuid not found: {tile_set_uuid}"
                 )
 
+        centroid = Centroid(validated_data["geometry"])
+
         tile = Tile.objects.filter(
-            geometry__contains=Centroid(validated_data["geometry"]), z=TILE_DEFAULT_ZOOM
+            geometry__contains=centroid, z=TILE_DEFAULT_ZOOM
         ).first()
 
         if not tile:
@@ -156,7 +159,12 @@ class DetectionInputSerializer(DetectionSerializer):
 
             detection_object = DetectionObject(**detection_object_data)
             detection_object.object_type = object_type
+
             detection_object.save()
+
+            parcel = Parcel.objects.filter(geometry__contains=centroid).first()
+
+            detection_object.parcel = parcel
 
         if detection_object_uuid:
             detection_object = DetectionObject.objects.filter(
@@ -165,7 +173,8 @@ class DetectionInputSerializer(DetectionSerializer):
 
             if not detection_object:
                 raise serializers.ValidationError(
-                    f"Detection object with following uuid not found: {detection_object_uuid}"
+                    f"Detection object with following uuid not found: {
+                        detection_object_uuid}"
                 )
 
         # create detection data

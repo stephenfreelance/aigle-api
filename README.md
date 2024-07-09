@@ -80,6 +80,9 @@ python manage.py import_geocommune
 
 # insert tiles: for montpellier and its surroundings
 python manage.py create_tile --x-min 266604 --x-max 269158 --y-min 190594 --y-max 192162
+
+# import parcels
+python manage.py import_parcels
 ```
 
 ### Emails

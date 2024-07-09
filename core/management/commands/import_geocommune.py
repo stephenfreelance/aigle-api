@@ -25,10 +25,6 @@ class Command(BaseCommand):
     help = "Import communes to database from JSON"
 
     def handle(self, *args, **options):
-        commune = GeoCommune(
-            name="test",
-        )
-
         data_communes: List[CommuneProperties] = download_json(FILE_JSON_URL)
 
         departments = GeoDepartment.objects.filter(

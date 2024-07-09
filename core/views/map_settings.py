@@ -80,7 +80,8 @@ class MapSettingsView(APIView):
                 object_types_serialized = ObjectTypeSerializer(
                     data=object_types_objects, many=True
                 )
-                object_types = object_types_serialized.initial_data
+                object_types_serialized.is_valid()
+                object_types = object_types_serialized.data
 
         setting = MapSettingsSerializer(
             data={
