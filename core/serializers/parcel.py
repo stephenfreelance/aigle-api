@@ -10,4 +10,5 @@ class ParcelSerializer(UuidTimestampedModelSerializerMixin):
             "prefix",
             "section",
             "num_parcel",
+            "geometry",
         ]

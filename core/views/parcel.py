@@ -56,6 +56,7 @@ class ParcelViewSet(BaseViewSetMixin[Parcel]):
             return Response([])
 
         queryset = self.get_queryset()
+        queryset = self.filter_queryset(queryset)
         queryset = queryset.filter(section__icontains=q)
         queryset = queryset.annotate(
             starts_with_q=Case(
@@ -77,6 +78,7 @@ class ParcelViewSet(BaseViewSetMixin[Parcel]):
             return Response([])
 
         queryset = self.get_queryset()
+        queryset = self.filter_queryset(queryset)
         queryset = queryset.filter(num_parcel__icontains=q)
         queryset = queryset.annotate(
             starts_with_q=Case(

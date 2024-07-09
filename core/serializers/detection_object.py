@@ -94,18 +94,48 @@ class DetectionObjectDetailSerializer(DetectionObjectSerializer):
             "user_group_rights",
         ]
 
-    detections = DetectionWithTileSerializer(many=True)
+    detections = serializers.SerializerMethodField()
     tile_sets = serializers.SerializerMethodField()
     user_group_rights = serializers.SerializerMethodField()
 
+    def get_detections(self, obj: DetectionObject):
+        user = self.context["request"].user
+
+        if self.context.get("tile_sets"):
+            tile_sets = self.context["tile_sets"]
+        else:
+            tile_sets = get_user_tile_sets(
+                user=user,
+                filter_tile_set_type__in=[TileSetType.PARTIAL, TileSetType.BACKGROUND],
+                order_bys=["-date"],
+                filter_tile_set_contains_point=Centroid(
+                    obj.detections.all()[0].geometry
+                ),
+            )
+            self.context["tile_sets"] = tile_sets
+
+        detections = obj.detections.filter(tile_set__in=tile_sets)
+
+        detections_serialized = DetectionWithTileSerializer(data=detections, many=True)
+        detections_serialized.is_valid()
+
+        return detections_serialized.data
+
     def get_tile_sets(self, obj: DetectionObject):
         user = self.context["request"].user
-        tile_sets = get_user_tile_sets(
-            user=user,
-            filter_tile_set_type__in=[TileSetType.PARTIAL, TileSetType.BACKGROUND],
-            order_bys=["-date"],
-            filter_tile_set_contains_point=Centroid(obj.detections.all()[0].geometry),
-        )
+
+        if self.context.get("tile_sets"):
+            tile_sets = self.context["tile_sets"]
+        else:
+            tile_sets = get_user_tile_sets(
+                user=user,
+                filter_tile_set_type__in=[TileSetType.PARTIAL, TileSetType.BACKGROUND],
+                order_bys=["-date"],
+                filter_tile_set_contains_point=Centroid(
+                    obj.detections.all()[0].geometry
+                ),
+            )
+            self.context["tile_sets"] = tile_sets
 
         if not tile_sets:
             return []

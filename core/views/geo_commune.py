@@ -8,7 +8,6 @@ from core.serializers.geo_commune import (
     GeoCommuneDetailSerializer,
     GeoCommuneSerializer,
 )
-from core.utils.permissions import AdminRolePermission
 from django.db.models import Case, IntegerField, Value, When
 from django.db.models.functions import Length
 
@@ -44,7 +43,6 @@ class GeoCommuneFilter(FilterSet):
 
 class GeoCommuneViewSet(BaseViewSetMixin[GeoCommune]):
     filterset_class = GeoCommuneFilter
-    permission_classes = [AdminRolePermission]
 
     def get_serializer_class(self):
         if self.action == "retrieve":
