@@ -8,22 +8,18 @@ from django_filters import (
     NumberFilter,
 )
 from django.contrib.gis.db.models.functions import Centroid
-from core.contants.order_by import TILE_SETS_ORDER_BYS
 from core.models.detection import Detection
 from core.models.detection_data import DetectionControlStatus, DetectionValidationStatus
-from core.models.tile_set import TileSet, TileSetType
+from core.models.tile_set import TileSetType
 from core.serializers.detection import (
     DetectionDetailSerializer,
     DetectionInputSerializer,
     DetectionMinimalSerializer,
     DetectionUpdateSerializer,
 )
+from core.utils.data_permissions import get_user_tile_sets
 from core.utils.filters import ChoiceInFilter, UuidInFilter
 from django.contrib.gis.geos import Polygon
-from django.contrib.gis.db.models.functions import Intersection
-
-from django.contrib.gis.db.models.aggregates import Union
-from django.db.models import Count
 
 
 class DetectionFilter(FilterSet):
@@ -79,20 +75,12 @@ class DetectionFilter(FilterSet):
         polygon_requested = Polygon.from_bbox((sw_lng, sw_lat, ne_lng, ne_lat))
         polygon_requested.srid = 4326
 
-        tile_sets = TileSet.objects
-        tile_sets = tile_sets.annotate(
-            union_geometry=Union("geo_zones__geometry"),
-            intersection=Intersection("union_geometry", polygon_requested),
-            geo_zones_count=Count("geo_zones"),
+        tile_sets, global_geometry = get_user_tile_sets(
+            user=self.request.user,
+            filter_tile_set_type__in=[TileSetType.PARTIAL, TileSetType.BACKGROUND],
+            filter_tile_set_intersects_geometry=polygon_requested,
+            filter_tile_set_uuid__in=tile_sets_uuids,
         )
-        tile_sets = tile_sets.filter(
-            uuid__in=tile_sets_uuids,
-            tile_set_type__in=[TileSetType.BACKGROUND, TileSetType.PARTIAL],
-        )
-        tile_sets = tile_sets.filter(
-            Q(intersection__isnull=False) | Q(geo_zones_count=0)
-        )
-        tile_sets = tile_sets.order_by(*TILE_SETS_ORDER_BYS).all()
 
         # Annotate the queryset with the centroid of the geometry
         queryset = queryset.annotate(centroid=Centroid("geometry"))
@@ -108,9 +96,16 @@ class DetectionFilter(FilterSet):
                     centroid__intersects=tile_set.intersection
                 )
             else:
-                where = Q(tile_set__uuid=tile_set.uuid) & Q(
-                    centroid__intersects=polygon_requested
-                )
+                if global_geometry:
+                    where = (
+                        Q(tile_set__uuid=tile_set.uuid)
+                        & Q(centroid__intersects=polygon_requested)
+                        & Q(centroid__within=global_geometry)
+                    )
+                else:
+                    where = Q(tile_set__uuid=tile_set.uuid) & Q(
+                        centroid__intersects=polygon_requested
+                    )
 
             for previous_tile_set in previous_tile_sets:
                 where = where & ~Q(centroid__within=previous_tile_set.intersection)

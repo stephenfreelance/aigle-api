@@ -16,6 +16,7 @@ from core.serializers.detection import (
 from core.serializers.object_type import ObjectTypeSerializer
 from rest_framework import serializers
 
+from core.serializers.parcel import ParcelMinimalSerializer
 from core.serializers.tile_set import TileSetMinimalSerializer
 from core.utils.data_permissions import get_user_tile_sets
 
@@ -27,8 +28,10 @@ class DetectionObjectSerializer(UuidTimestampedModelSerializerMixin):
             "id",
             "address",
             "object_type",
+            "parcel",
         ]
 
+    parcel = ParcelMinimalSerializer(read_only=True)
     object_type = ObjectTypeSerializer(read_only=True)
 
 
@@ -49,7 +52,7 @@ class DetectionObjectHistorySerializer(DetectionObjectSerializer):
     def get_detections(self, obj: DetectionObject):
         user = self.context["request"].user
         detections = obj.detections.all()
-        tile_sets = get_user_tile_sets(
+        tile_sets, global_geometry = get_user_tile_sets(
             user=user,
             filter_tile_set_type__in=[TileSetType.PARTIAL, TileSetType.BACKGROUND],
             order_bys=["-date"],
@@ -104,7 +107,7 @@ class DetectionObjectDetailSerializer(DetectionObjectSerializer):
         if self.context.get("tile_sets"):
             tile_sets = self.context["tile_sets"]
         else:
-            tile_sets = get_user_tile_sets(
+            tile_sets, global_geometry = get_user_tile_sets(
                 user=user,
                 filter_tile_set_type__in=[TileSetType.PARTIAL, TileSetType.BACKGROUND],
                 order_bys=["-date"],
@@ -127,7 +130,7 @@ class DetectionObjectDetailSerializer(DetectionObjectSerializer):
         if self.context.get("tile_sets"):
             tile_sets = self.context["tile_sets"]
         else:
-            tile_sets = get_user_tile_sets(
+            tile_sets, global_geometry = get_user_tile_sets(
                 user=user,
                 filter_tile_set_type__in=[TileSetType.PARTIAL, TileSetType.BACKGROUND],
                 order_bys=["-date"],

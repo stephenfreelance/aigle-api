@@ -160,11 +160,10 @@ class DetectionInputSerializer(DetectionSerializer):
             detection_object = DetectionObject(**detection_object_data)
             detection_object.object_type = object_type
 
-            detection_object.save()
-
             parcel = Parcel.objects.filter(geometry__contains=centroid).first()
-
             detection_object.parcel = parcel
+
+            detection_object.save()
 
         if detection_object_uuid:
             detection_object = DetectionObject.objects.filter(

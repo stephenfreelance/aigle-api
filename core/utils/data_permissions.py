@@ -1,3 +1,4 @@
+from typing import List, Optional, Tuple
 from core.contants.order_by import TILE_SETS_ORDER_BYS
 from core.models.tile_set import TileSet, TileSetStatus, TileSetType
 from core.models.user import UserRole
@@ -5,8 +6,11 @@ from core.models.user_group import UserUserGroup
 from django.contrib.gis.db.models.functions import Intersection
 from django.db.models import Q
 from django.db.models import Count
+from django.contrib.gis.geos.collections import MultiPolygon
 
 from django.contrib.gis.db.models.aggregates import Union
+
+from core.utils.postgis import GeometryType, GetGeometryType
 
 
 def get_user_tile_sets(
@@ -14,8 +18,10 @@ def get_user_tile_sets(
     filter_tile_set_status__in=None,
     filter_tile_set_type__in=None,
     filter_tile_set_contains_point=None,
+    filter_tile_set_intersects_geometry=None,
+    filter_tile_set_uuid__in=None,
     order_bys=None,
-):
+) -> Tuple[List[TileSet], Optional[MultiPolygon]]:
     if filter_tile_set_status__in is None:
         filter_tile_set_status__in = [TileSetStatus.VISIBLE, TileSetStatus.HIDDEN]
 
@@ -42,6 +48,7 @@ def get_user_tile_sets(
         )["total_geo_union"]
         intersection = Intersection("union_geometry", final_union)
     else:
+        final_union = None
         intersection = Union("geo_zones__geometry")
 
     tile_sets = TileSet.objects.filter(
@@ -52,9 +59,21 @@ def get_user_tile_sets(
         union_geometry=Union("geo_zones__geometry"),
         intersection=intersection,
         geo_zones_count=Count("geo_zones"),
+        intersection_type=GetGeometryType("intersection"),
     )
 
-    tile_sets = tile_sets.filter(Q(intersection__isnull=False) | Q(geo_zones_count=0))
+    tile_sets = tile_sets.filter(
+        (
+            Q(intersection__isnull=False)
+            & Q(
+                intersection_type__in=[
+                    GeometryType.POLYGON,
+                    GeometryType.MULTIPOLYGON,
+                ]
+            )
+        )
+        | Q(geo_zones_count=0)
+    )
 
     if filter_tile_set_contains_point:
         tile_sets = tile_sets.filter(
@@ -62,4 +81,13 @@ def get_user_tile_sets(
             | Q(geo_zones_count=0)
         )
 
-    return tile_sets.distinct()
+    if filter_tile_set_intersects_geometry:
+        tile_sets = tile_sets.filter(
+            Q(intersection__intersects=filter_tile_set_intersects_geometry)
+            | Q(geo_zones_count=0)
+        )
+
+    if filter_tile_set_uuid__in:
+        tile_sets = tile_sets.filter(uuid__in=filter_tile_set_uuid__in)
+
+    return tile_sets.distinct(), final_union

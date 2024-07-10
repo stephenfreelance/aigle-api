@@ -2,7 +2,7 @@ from core.models.parcel import Parcel
 from core.serializers import UuidTimestampedModelSerializerMixin
 
 
-class ParcelSerializer(UuidTimestampedModelSerializerMixin):
+class ParcelMinimalSerializer(UuidTimestampedModelSerializerMixin):
     class Meta(UuidTimestampedModelSerializerMixin.Meta):
         model = Parcel
         fields = UuidTimestampedModelSerializerMixin.Meta.fields + [
@@ -10,5 +10,11 @@ class ParcelSerializer(UuidTimestampedModelSerializerMixin):
             "prefix",
             "section",
             "num_parcel",
+        ]
+
+
+class ParcelSerializer(ParcelMinimalSerializer):
+    class Meta(ParcelMinimalSerializer.Meta):
+        fields = ParcelMinimalSerializer.Meta.fields + [
             "geometry",
         ]

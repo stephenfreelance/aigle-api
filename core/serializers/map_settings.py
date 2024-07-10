@@ -13,3 +13,4 @@ class MapSettingTileSetSerializer(serializers.Serializer):
 class MapSettingsSerializer(serializers.Serializer):
     tile_set_settings = MapSettingTileSetSerializer(many=True)
     object_types = ObjectTypeSerializer(many=True)
+    global_geometry = models_gis.GeometryField(null=True)

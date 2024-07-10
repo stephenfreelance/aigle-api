@@ -23,6 +23,7 @@ class MapSettingsView(APIView):
     def get(self, request, format=None):
         setting_tile_sets = []
         object_types = []
+        global_geometry = None
 
         # super admin has access to all tile sets and all object types
         if request.user.user_role == UserRole.SUPER_ADMIN:
@@ -55,7 +56,7 @@ class MapSettingsView(APIView):
                 setting_tile_sets.append(setting_tile_set.initial_data)
 
         if request.user.user_role != UserRole.SUPER_ADMIN:
-            tile_sets = get_user_tile_sets(request.user)
+            tile_sets, global_geometry = get_user_tile_sets(request.user)
 
             for tile_set in tile_sets:
                 setting_tile_set = MapSettingTileSetSerializer(
@@ -87,6 +88,9 @@ class MapSettingsView(APIView):
             data={
                 "tile_set_settings": setting_tile_sets,
                 "object_types": object_types,
+                "global_geometry": json.loads(GEOSGeometry(global_geometry).geojson)
+                if global_geometry
+                else None,
             }
         )
 
