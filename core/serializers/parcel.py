@@ -18,3 +18,8 @@ class ParcelSerializer(ParcelMinimalSerializer):
         fields = ParcelMinimalSerializer.Meta.fields + [
             "geometry",
         ]
+
+
+class ParcelDetailSerializer(ParcelSerializer):
+    class Meta(ParcelSerializer.Meta):
+        fields = ParcelSerializer.Meta.fields + ["detection_objects"]

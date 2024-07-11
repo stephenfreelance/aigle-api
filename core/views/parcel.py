@@ -3,7 +3,7 @@ from common.views.base import BaseViewSetMixin
 from django_filters import FilterSet, CharFilter
 
 from core.models.parcel import Parcel
-from core.serializers.parcel import ParcelSerializer
+from core.serializers.parcel import ParcelDetailSerializer, ParcelSerializer
 from core.utils.filters import UuidInFilter
 from rest_framework.response import Response
 from rest_framework.decorators import action
@@ -42,6 +42,9 @@ class ParcelViewSet(BaseViewSetMixin[Parcel]):
     filterset_class = ParcelFilter
 
     def get_serializer_class(self):
+        if self.action == "retrieve":
+            return ParcelDetailSerializer
+
         return ParcelSerializer
 
     def get_queryset(self):
