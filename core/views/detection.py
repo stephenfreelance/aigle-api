@@ -72,7 +72,10 @@ class DetectionFilter(FilterSet):
             )
 
         return queryset.filter(
-            detection_data__detection_prescription_status=DetectionPrescriptionStatus.NOT_PRESCRIBED
+            Q(
+                detection_data__detection_prescription_status=DetectionPrescriptionStatus.NOT_PRESCRIBED
+            )
+            | Q(detection_data__detection_prescription_status=None)
         )
 
     def filter_queryset(self, queryset):
