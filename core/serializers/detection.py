@@ -2,6 +2,7 @@ from core.models.detection import Detection
 from core.models.detection_data import (
     DetectionControlStatus,
     DetectionData,
+    DetectionPrescriptionStatus,
     DetectionValidationStatus,
 )
 from core.models.detection_object import DetectionObject
@@ -19,6 +20,8 @@ from core.serializers.tile import TileSerializer
 from core.serializers.tile_set import TileSetMinimalSerializer
 from django.contrib.gis.db.models.functions import Centroid
 
+from core.utils.prescription import compute_prescription
+
 
 class DetectionMinimalSerializer(
     UuidTimestampedModelSerializerMixin, GeoFeatureModelSerializer
@@ -32,6 +35,7 @@ class DetectionMinimalSerializer(
             "object_type_color",
             "detection_control_status",
             "detection_validation_status",
+            "detection_prescription_status",
             "detection_object_uuid",
         ]
 
@@ -46,6 +50,10 @@ class DetectionMinimalSerializer(
     detection_validation_status = serializers.ChoiceField(
         source="detection_data.detection_validation_status",
         choices=DetectionValidationStatus.choices,
+    )
+    detection_prescription_status = serializers.ChoiceField(
+        source="detection_data.detection_prescription_status",
+        choices=DetectionPrescriptionStatus.choices,
     )
     detection_object_uuid = serializers.CharField(source="detection_object.uuid")
 
@@ -189,6 +197,20 @@ class DetectionInputSerializer(DetectionSerializer):
                 detection_validation_status=DetectionValidationStatus.SUSPECT,
             )
 
+        if (
+            detection_data.detection_prescription_status is None
+            and detection_object.object_type.prescription_duration_years
+        ):
+            detection_data.detection_prescription_status = (
+                DetectionPrescriptionStatus.NOT_PRESCRIBED
+            )
+
+        if (
+            detection_data.detection_prescription_status is not None
+            and not detection_object.object_type.prescription_duration_years
+        ):
+            detection_data.detection_prescription_status = None
+
         detection_data.user_last_update = self.context["request"].user
         detection_data.save()
 
@@ -206,6 +228,9 @@ class DetectionInputSerializer(DetectionSerializer):
             instance.tile = tile
 
         instance.save()
+
+        # update prescription
+        compute_prescription(detection_object)
 
         return instance
 
@@ -229,7 +254,9 @@ class DetectionUpdateSerializer(DetectionSerializer):
                 )
 
             instance.detection_object.object_type = object_type
-            instance.detection_object.save()
+
+            # update prescription
+            compute_prescription(instance.detection_object)
 
         instance.save()
 

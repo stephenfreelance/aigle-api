@@ -17,6 +17,7 @@ djangorestframework-gis==1.0
 djangorestframework-simplejwt==5.3.1
 djoser==2.2.2
 filelock==3.14.0
+GDAL==3.9.0
 gunicorn==22.0.0
 identify==2.5.36
 idna==3.7
@@ -31,11 +32,13 @@ pycparser==2.22
 PyJWT==2.8.0
 pyproj==3.6.1
 pyshp==2.3.1
+python-dateutil==2.9.0.post0
 python3-openid==3.2.0
 PyYAML==6.0.1
 requests==2.32.2
 requests-oauthlib==2.0.0
 ruff==0.4.8
+six==1.16.0
 social-auth-app-django==5.4.1
 social-auth-core==4.5.4
 sqlparse==0.5.0

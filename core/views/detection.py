@@ -4,12 +4,14 @@ from operator import or_
 from django.db.models import Q
 from functools import reduce
 from django_filters import FilterSet
-from django_filters import (
-    NumberFilter,
-)
+from django_filters import NumberFilter, ChoiceFilter
 from django.contrib.gis.db.models.functions import Centroid
 from core.models.detection import Detection
-from core.models.detection_data import DetectionControlStatus, DetectionValidationStatus
+from core.models.detection_data import (
+    DetectionControlStatus,
+    DetectionPrescriptionStatus,
+    DetectionValidationStatus,
+)
 from core.models.tile_set import TileSetType
 from core.serializers.detection import (
     DetectionDetailSerializer,
@@ -20,6 +22,8 @@ from core.serializers.detection import (
 from core.utils.data_permissions import get_user_tile_sets
 from core.utils.filters import ChoiceInFilter, UuidInFilter
 from django.contrib.gis.geos import Polygon
+
+BOOLEAN_CHOICES = (("false", "False"), ("true", "True"), ("null", "Null"))
 
 
 class DetectionFilter(FilterSet):
@@ -33,12 +37,19 @@ class DetectionFilter(FilterSet):
         field_name="detection_data__detection_control_status",
         choices=DetectionControlStatus.choices,
     )
+    detectionPrescriptionStatuses = ChoiceInFilter(
+        field_name="detection_data__detection_prescription_status",
+        choices=DetectionControlStatus.choices,
+    )
 
     neLat = NumberFilter(method="pass_")
     neLng = NumberFilter(method="pass_")
 
     swLat = NumberFilter(method="pass_")
     swLng = NumberFilter(method="pass_")
+
+    score = NumberFilter(field_name="score", lookup_expr="gte")
+    prescripted = ChoiceFilter(choices=BOOLEAN_CHOICES, method="filter_prescripted")
 
     def pass_(self, queryset, name, value):
         return queryset
@@ -50,6 +61,19 @@ class DetectionFilter(FilterSet):
 
     def search_tile_sets_uuids(self, queryset, name, value):
         return queryset
+
+    def filter_prescripted(self, queryset, name, value):
+        if value == "null":
+            return queryset
+
+        if value == "true":
+            return queryset.filter(
+                detection_data__detection_prescription_status=DetectionPrescriptionStatus.PRESCRIBED
+            )
+
+        return queryset.filter(
+            detection_data__detection_prescription_status=DetectionPrescriptionStatus.NOT_PRESCRIBED
+        )
 
     def filter_queryset(self, queryset):
         queryset = super().filter_queryset(queryset)

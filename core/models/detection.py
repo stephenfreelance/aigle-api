@@ -32,7 +32,6 @@ class Detection(TimestampedModelMixin, UuidModelMixin, DeletableModelMixin):
     detection_object = models.ForeignKey(
         DetectionObject, related_name="detections", on_delete=models.CASCADE
     )
-    # data managed by the user: set if at least one update has been made by a user
     detection_data = models.OneToOneField(
         DetectionData,
         related_name="detection",
@@ -40,6 +39,7 @@ class Detection(TimestampedModelMixin, UuidModelMixin, DeletableModelMixin):
         null=True,
         blank=True,
     )
+    auto_prescribed = models.BooleanField(default=False)
 
     tile = models.ForeignKey(Tile, related_name="detections", on_delete=models.CASCADE)
     tile_set = models.ForeignKey(
@@ -48,6 +48,7 @@ class Detection(TimestampedModelMixin, UuidModelMixin, DeletableModelMixin):
 
     class Meta:
         indexes = [
+            models.Index(fields=["score"]),
             models.Index(fields=["created_at"]),
             models.Index(fields=["uuid"]),
             models.Index(fields=["detection_source"]),

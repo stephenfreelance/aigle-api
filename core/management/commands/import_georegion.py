@@ -2,7 +2,6 @@ import json
 from typing import TypedDict
 from django.core.management.base import BaseCommand
 import shapefile
-from pyproj import Transformer
 
 from core.management.commands._common.file import download_file, extract_zip
 from core.models import GeoRegion
@@ -45,11 +44,6 @@ class Command(BaseCommand):
 
         shape = shapefile.Reader(f"{extract_folder_path}/{SHP_FILE_NAME}")
 
-        # Define input and output CRS
-        input_crs = "epsg:2154"  # Adjust based on the CRS of the shapefile
-        output_crs = "epsg:4326"
-        transformer = Transformer.from_crs(input_crs, output_crs, always_xy=True)
-
         for feature in shape.shapeRecords():
             properties: RegionProperties = feature.__geo_interface__["properties"]
 
@@ -58,36 +52,14 @@ class Command(BaseCommand):
             if insee_codes and insee_code not in insee_codes:
                 continue
 
-            geometry = feature.__geo_interface__["geometry"]
+            geometry = GEOSGeometry(json.dumps(feature.__geo_interface__["geometry"]))
+            geometry.transform(2154, 4326)
 
-            # Transform the geometry coordinates
-            transformed_coords = []
-            if geometry["type"] == "Polygon":
-                for ring in geometry["coordinates"]:
-                    transformed_ring = [transformer.transform(x, y) for x, y in ring]
-                    transformed_coords.append(transformed_ring)
-            elif geometry["type"] == "MultiPolygon":
-                for polygon in geometry["coordinates"]:
-                    transformed_polygon = []
-                    for ring in polygon:
-                        transformed_ring = [
-                            transformer.transform(x, y) for x, y in ring
-                        ]
-                        transformed_polygon.append(transformed_ring)
-                    transformed_coords.append(transformed_polygon)
-
-            # Create the transformed geometry
-            transformed_geometry = {
-                "type": geometry["type"],
-                "coordinates": transformed_coords,
-            }
-
-            geom = GEOSGeometry(json.dumps(transformed_geometry))
             region = GeoRegion(
-                name=properties["nom"],
-                insee_code=properties["code_insee"],
+                name=f"test_{properties["nom"]}",
+                insee_code=f"test_{properties["code_insee"]}",
                 surface_km2=properties["surf_km2"],
-                geometry=geom,
+                geometry=geometry,
             )
             region.save()
 

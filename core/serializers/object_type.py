@@ -10,7 +10,11 @@ from core.serializers.utils.query import get_objects
 class ObjectTypeSerializer(UuidTimestampedModelSerializerMixin):
     class Meta(UuidTimestampedModelSerializerMixin.Meta):
         model = ObjectType
-        fields = UuidTimestampedModelSerializerMixin.Meta.fields + ["name", "color"]
+        fields = UuidTimestampedModelSerializerMixin.Meta.fields + [
+            "name",
+            "color",
+            "prescription_duration_years",
+        ]
 
 
 class ObjectTypeDetailSerializer(ObjectTypeSerializer):
@@ -24,7 +28,12 @@ class ObjectTypeDetailSerializer(ObjectTypeSerializer):
 
 class ObjectTypeInputSerializer(ObjectTypeDetailSerializer):
     class Meta(ObjectTypeDetailSerializer.Meta):
-        fields = ["name", "color", "object_type_categories_uuids"]
+        fields = [
+            "name",
+            "color",
+            "prescription_duration_years",
+            "object_type_categories_uuids",
+        ]
 
     object_type_categories_uuids = serializers.ListField(
         child=serializers.UUIDField(), required=False, allow_empty=True, write_only=True

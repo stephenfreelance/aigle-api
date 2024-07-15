@@ -91,4 +91,4 @@ def get_user_tile_sets(
         tile_sets = tile_sets.filter(uuid__in=filter_tile_set_uuid__in)
 
     # TODO: Add final_union
-    return tile_sets.distinct(), None
+    return tile_sets.distinct(), final_union

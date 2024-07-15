@@ -25,6 +25,11 @@ class DetectionValidationStatus(models.TextChoices):
     CONTROLLED = "CONTROLLED", "CONTROLLED"
 
 
+class DetectionPrescriptionStatus(models.TextChoices):
+    PRESCRIBED = "PRESCRIBED", "PRESCRIBED"
+    NOT_PRESCRIBED = "NOT_PRESCRIBED", "NOT_PRESCRIBED"
+
+
 class DetectionData(TimestampedModelMixin, UuidModelMixin, DeletableModelMixin):
     detection_control_status = models.CharField(
         max_length=DEFAULT_MAX_LENGTH,
@@ -33,6 +38,11 @@ class DetectionData(TimestampedModelMixin, UuidModelMixin, DeletableModelMixin):
     detection_validation_status = models.CharField(
         max_length=DEFAULT_MAX_LENGTH,
         choices=DetectionValidationStatus.choices,
+    )
+    detection_prescription_status = models.CharField(
+        max_length=DEFAULT_MAX_LENGTH,
+        choices=DetectionPrescriptionStatus.choices,
+        null=True,
     )
     user_last_update = models.ForeignKey(
         User, related_name="detection_datas_last_updated", on_delete=models.CASCADE

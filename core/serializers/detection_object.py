@@ -19,6 +19,7 @@ from rest_framework import serializers
 from core.serializers.parcel import ParcelMinimalSerializer
 from core.serializers.tile_set import TileSetMinimalSerializer
 from core.utils.data_permissions import get_user_tile_sets
+from core.utils.prescription import compute_prescription
 
 
 class DetectionObjectSerializer(UuidTimestampedModelSerializerMixin):
@@ -213,7 +214,7 @@ class DetectionObjectInputSerializer(DetectionObjectSerializer):
             )
 
         instance.object_type = object_type
-        instance.save()
+        compute_prescription(instance)
 
         return instance
 

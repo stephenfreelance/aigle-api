@@ -10,6 +10,7 @@ class DetectionDataSerializer(UuidTimestampedModelSerializerMixin):
         fields = UuidTimestampedModelSerializerMixin.Meta.fields + [
             "detection_control_status",
             "detection_validation_status",
+            "detection_prescription_status",
             "user_last_update_uuid",
         ]
 
@@ -23,6 +24,7 @@ class DetectionDataInputSerializer(DetectionDataSerializer):
         fields = [
             "detection_control_status",
             "detection_validation_status",
+            "detection_prescription_status",
         ]
 
     def update(self, instance, validated_data):
