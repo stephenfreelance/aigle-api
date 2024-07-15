@@ -14,7 +14,6 @@ class EndpointSerializer(serializers.Serializer):
 
 
 def endpoint(request):
-    # Your custom logic here
     params_serializer = EndpointSerializer(data=request.GET)
     params_serializer.is_valid(raise_exception=True)
 
@@ -25,4 +24,4 @@ def endpoint(request):
     return JsonResponse({"lat": "lat"})
 
 
-URL = "get-tile"
+URL = "get-tile/"

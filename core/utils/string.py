@@ -24,9 +24,11 @@ def strip_accents(text):
 
 
 def normalize(string: str) -> str:
-    return re.sub(
+    res = re.sub(
         "[^a-zA-Z0-9 \n\\.]", " ", unicodedata.normalize("NFD", strip_accents(string))
     ).lower()
+
+    return " ".join(res.split())
 
 
 def slugify(string: str) -> str:
