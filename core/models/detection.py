@@ -3,6 +3,7 @@ from django.db import models
 
 from common.constants.models import DEFAULT_MAX_LENGTH
 from common.models.deletable import DeletableModelMixin
+from common.models.importable import ImportableModelMixin
 from common.models.timestamped import TimestampedModelMixin
 from common.models.uuid import UuidModelMixin
 from core.models.detection_object import DetectionObject
@@ -19,7 +20,9 @@ class DetectionSource(models.TextChoices):
     ANALYSIS = "ANALYSIS", "ANALYSIS"
 
 
-class Detection(TimestampedModelMixin, UuidModelMixin, DeletableModelMixin):
+class Detection(
+    TimestampedModelMixin, UuidModelMixin, DeletableModelMixin, ImportableModelMixin
+):
     geometry = models_gis.GeometryField()
     score = models.FloatField(
         validators=[MinValueValidator(0), MaxValueValidator(1)], default=1
@@ -45,8 +48,6 @@ class Detection(TimestampedModelMixin, UuidModelMixin, DeletableModelMixin):
     tile_set = models.ForeignKey(
         TileSet, related_name="detections", on_delete=models.CASCADE
     )
-
-    batch_id = models.CharField(max_length=DEFAULT_MAX_LENGTH, null=True)
 
     class Meta:
         indexes = [

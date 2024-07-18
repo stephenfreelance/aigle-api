@@ -34,6 +34,7 @@ INSERT_BATCH_SIZE = 1000
 
 class DetectionRowSerializer(serializers.Serializer):
     score = serializers.FloatField()
+    id = serializers.IntegerField(required=True)
     address = serializers.CharField(allow_blank=True)
     object_type = serializers.CharField()
     detection_control_status = serializers.ChoiceField(
@@ -100,6 +101,11 @@ class Command(BaseCommand):
                 "You have to provide either a file path or a table name with parameter --file-path or --table-name"
             )
 
+        if options.get("table_name") and not options.get("batch_id"):
+            raise CommandError(
+                "You have to provide a batch id with parameter --batch-id when using a table name with parameter --table-name"
+            )
+
         if options.get("file_path") and options.get("table_name"):
             raise CommandError(
                 "You can't provide both a file path and a table name with parameter --file-path or --table-name"
@@ -113,12 +119,12 @@ class Command(BaseCommand):
         return reader
 
     def get_detection_rows_to_insert_from_table(
-        self, table_name: str, table_schema: str
+        self, table_name: str, table_schema: str, batch_id: str
     ) -> Iterable[Dict[str, Any]]:
         self.cursor = connection.cursor()
         self.cursor.execute(
-            "SELECT %s FROM %s.%s"
-            % (", ".join(TABLE_COLUMNS), table_schema, table_name)
+            "SELECT %s FROM %s.%s WHERE batch_id = %s ORDER BY score DESC"
+            % (", ".join(TABLE_COLUMNS), table_schema, table_name, batch_id)
         )
         return map(lambda row: dict(zip(TABLE_COLUMNS, row)), self.cursor)
 
@@ -145,7 +151,9 @@ class Command(BaseCommand):
             )
         else:
             detection_rows_to_insert = self.get_detection_rows_to_insert_from_table(
-                table_name=options["table_name"], table_schema=options["table_schema"]
+                table_name=options["table_name"],
+                table_schema=options["table_schema"],
+                batch_id=self.batch_id,
             )
 
         for row in detection_rows_to_insert:
@@ -190,7 +198,8 @@ class Command(BaseCommand):
         serializer = DetectionRowSerializer(data=detection_row)
         if not serializer.is_valid():
             print(
-                f"Invalid detection row: {detection_row}, errors: {serializer.errors} skipping..."
+                f"Invalid detection row: {detection_row}, errors: {
+                    serializer.errors} skipping..."
             )
             return
 
@@ -313,6 +322,7 @@ class Command(BaseCommand):
             tile_set=self.tile_set,
             detection_data=detection_data,
             batch_id=self.batch_id,
+            import_id=serialized_detection["id"],
         )
 
         self.detections_to_insert.append(detection)
@@ -332,6 +342,7 @@ class Command(BaseCommand):
                 parcel=parcel,
                 address=serialized_detection["address"],
                 batch_id=self.batch_id,
+                import_id=serialized_detection["id"],
             )
             self.detection_objects_to_insert.append(detection_object)
 
