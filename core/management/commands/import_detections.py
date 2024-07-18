@@ -35,7 +35,7 @@ INSERT_BATCH_SIZE = 1000
 class DetectionRowSerializer(serializers.Serializer):
     score = serializers.FloatField()
     id = serializers.IntegerField(required=True)
-    address = serializers.CharField(allow_blank=True)
+    address = serializers.CharField(allow_blank=True, allow_null=True)
     object_type = serializers.CharField()
     detection_control_status = serializers.ChoiceField(
         choices=DetectionControlStatus.choices,
@@ -86,6 +86,7 @@ class Command(BaseCommand):
         self.total_inserted_detections = 0
 
         self.file = None
+        self.total = None
         self.query_colums = None
 
     def add_arguments(self, parser):
@@ -123,8 +124,13 @@ class Command(BaseCommand):
     ) -> Iterable[Dict[str, Any]]:
         self.cursor = connection.cursor()
         self.cursor.execute(
+            "SELECT count(*) FROM %s.%s WHERE batch_id = %s"
+            % (table_schema, table_name, f"'{batch_id}'")
+        )
+        self.total = self.cursor.fetchone()[0]
+        self.cursor.execute(
             "SELECT %s FROM %s.%s WHERE batch_id = %s ORDER BY score DESC"
-            % (", ".join(TABLE_COLUMNS), table_schema, table_name, batch_id)
+            % (", ".join(TABLE_COLUMNS), table_schema, table_name, f"'{batch_id}'")
         )
         return map(lambda row: dict(zip(TABLE_COLUMNS, row)), self.cursor)
 
@@ -157,9 +163,6 @@ class Command(BaseCommand):
             )
 
         for row in detection_rows_to_insert:
-            import pdb
-
-            pdb.set_trace()
             self.queue_detection(row)
             self.insert_detections()
 
@@ -372,7 +375,13 @@ class Command(BaseCommand):
 
         self.total_inserted_detections += len(self.detections_to_insert)
 
-        print(f"Inserted {self.total_inserted_detections} detections in total")
+        if self.total:
+            print(
+                f"Inserted {self.total_inserted_detections}/{self.total} detections in total"
+            )
+        else:
+            print(f"Inserted {self.total_inserted_detections} detections in total")
+
         print(f"Elapsed time: {datetime.now() - self.start_time}")
 
         self.detection_objects_to_insert = []
