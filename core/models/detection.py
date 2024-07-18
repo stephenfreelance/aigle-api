@@ -46,6 +46,8 @@ class Detection(TimestampedModelMixin, UuidModelMixin, DeletableModelMixin):
         TileSet, related_name="detections", on_delete=models.CASCADE
     )
 
+    batch_id = models.CharField(max_length=DEFAULT_MAX_LENGTH, null=True)
+
     class Meta:
         indexes = [
             models.Index(fields=["score"]),

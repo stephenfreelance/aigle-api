@@ -10,11 +10,11 @@ from core.models.user import User
 
 
 class DetectionControlStatus(models.TextChoices):
-    DETECTED = "DETECTED", "DETECTED"
+    NOT_CONTROLLED = "NOT_CONTROLLED", "NOT_CONTROLLED"
     SIGNALED_INTERNALLY = "SIGNALED_INTERNALLY", "SIGNALED_INTERNALLY"
     SIGNALED_COLLECTIVITY = "SIGNALED_COLLECTIVITY", "SIGNALED_COLLECTIVITY"
-    CONFIRMED_FIELD = "CONFIRMED_FIELD", "CONFIRMED_FIELD"
-    INVALIDATED_FIELD = "INVALIDATED_FIELD", "INVALIDATED_FIELD"
+    VERBALIZED = "VERBALIZED", "VERBALIZED"
+    REHABILITATED = "REHABILITATED", "REHABILITATED"
 
 
 class DetectionValidationStatus(models.TextChoices):
@@ -22,7 +22,7 @@ class DetectionValidationStatus(models.TextChoices):
     SUSPECT = "SUSPECT", "SUSPECT"
     LEGITIMATE = "LEGITIMATE", "LEGITIMATE"
     INVALIDATED = "INVALIDATED", "INVALIDATED"
-    CONTROLLED = "CONTROLLED", "CONTROLLED"
+    DISAPPEARED = "DISAPPEARED", "DISAPPEARED"
 
 
 class DetectionPrescriptionStatus(models.TextChoices):
@@ -45,5 +45,8 @@ class DetectionData(TimestampedModelMixin, UuidModelMixin, DeletableModelMixin):
         null=True,
     )
     user_last_update = models.ForeignKey(
-        User, related_name="detection_datas_last_updated", on_delete=models.CASCADE
+        User,
+        related_name="detection_datas_last_updated",
+        on_delete=models.SET_NULL,
+        null=True,
     )

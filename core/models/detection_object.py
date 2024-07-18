@@ -21,3 +21,4 @@ class DetectionObject(TimestampedModelMixin, UuidModelMixin, DeletableModelMixin
         null=True,
         on_delete=models.CASCADE,
     )
+    batch_id = models.CharField(max_length=DEFAULT_MAX_LENGTH, null=True)

@@ -48,6 +48,9 @@ class TileSet(TimestampedModelMixin, UuidModelMixin, DeletableModelMixin):
 
     geo_zones = models.ManyToManyField(GeoZone, related_name="tile_sets")
 
+    last_import_started_at = models.DateTimeField(null=True)
+    last_import_ended_at = models.DateTimeField(null=True)
+
     class Meta:
         indexes = [
             models.Index(fields=["tile_set_status"]),

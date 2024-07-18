@@ -9,9 +9,25 @@ def compute_prescription(detection_object: DetectionObject) -> DetectionObject:
 
     # if prescription do not apply to this object type, we reset all prescriptions
     if not object_type.prescription_duration_years:
+        detections_to_update = []
+        detections_data_to_update = []
+
         for detection in detection_object.detections.all():
-            detection.auto_prescribed = False
-            detection.detection_prescription_status = None
+            if detection.auto_prescribed:
+                detection.auto_prescribed = False
+                detections_to_update.append(detection)
+
+            if detection.detection_data.detection_prescription_status is not None:
+                detection.detection_data.detection_prescription_status = None
+                detections_data_to_update.append(detection.detection_data)
+
+        if detections_to_update:
+            Detection.objects.bulk_update(detections_to_update, ["auto_prescribed"])
+
+        if detections_data_to_update:
+            DetectionData.objects.bulk_update(
+                detections_data_to_update, ["detection_prescription_status"]
+            )
 
         return detection_object
 

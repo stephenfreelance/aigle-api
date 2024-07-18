@@ -40,9 +40,12 @@ class TileSetSerializer(TileSetMinimalSerializer):
     class Meta(TileSetMinimalSerializer.Meta):
         model = TileSet
         fields = TileSetMinimalSerializer.Meta.fields + [
+            "id",
             "communes",
             "departments",
             "regions",
+            "last_import_started_at",
+            "last_import_ended_at",
         ]
 
     communes = serializers.SerializerMethodField()

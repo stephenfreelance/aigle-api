@@ -26,8 +26,9 @@ class GeoCommuneFilter(FilterSet):
 
         queryset = queryset.annotate(
             match_score=Case(
-                When(name_normalized__iexact=value_normalized, then=Value(4)),
-                When(iso_code__iexact=value_normalized, then=Value(3)),
+                When(name_normalized__iexact=value_normalized, then=Value(5)),
+                When(iso_code__iexact=value_normalized, then=Value(4)),
+                When(name_normalized__istartswith=value_normalized, then=Value(3)),
                 When(name_normalized__icontains=value_normalized, then=Value(2)),
                 When(iso_code__icontains=value_normalized, then=Value(1)),
                 default=Value(0),

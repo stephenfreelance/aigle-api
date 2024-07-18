@@ -30,4 +30,6 @@ class Parcel(TimestampedModelMixin, UuidModelMixin, DeletableModelMixin):
     class Meta:
         indexes = [
             models.Index(fields=["section", "num_parcel", "commune"]),
+            models.Index(fields=["num_parcel"]),
+            models.Index(fields=["section"]),
         ]
