@@ -1,5 +1,7 @@
 from typing import List, Optional, Tuple
 from core.contants.order_by import TILE_SETS_ORDER_BYS
+from core.models.object_type import ObjectType
+from core.models.object_type_category import ObjectTypeCategoryObjectTypeStatus
 from core.models.tile_set import TileSet, TileSetStatus, TileSetType
 from core.models.user import UserRole
 from core.models.user_group import UserUserGroup
@@ -90,5 +92,56 @@ def get_user_tile_sets(
     if filter_tile_set_uuid__in:
         tile_sets = tile_sets.filter(uuid__in=filter_tile_set_uuid__in)
 
-    # TODO: Add final_union
     return tile_sets.distinct(), final_union
+
+
+def get_user_object_types_with_status(
+    user,
+) -> List[Tuple[ObjectType, ObjectTypeCategoryObjectTypeStatus]]:
+    if user.user_role == UserRole.SUPER_ADMIN:
+        object_types = ObjectType.objects.all()
+
+        return [
+            (object_type, ObjectTypeCategoryObjectTypeStatus.VISIBLE)
+            for object_type in object_types
+        ]
+
+    user_user_groups = user.user_user_groups.prefetch_related(
+        "user_group",
+        "user_group__object_type_categories",
+        "user_group__object_type_categories__object_type_category_object_types",
+        "user_group__object_type_categories__object_type_category_object_types__object_type",
+    ).all()
+
+    object_type_categories = []
+    for user_user_group in user_user_groups:
+        object_type_categories.extend(
+            user_user_group.user_group.object_type_categories.all()
+        )
+
+    object_type_uuids_statuses_map = {}
+
+    for object_type_category in object_type_categories:
+        for (
+            object_type_category_object_type
+        ) in object_type_category.object_type_category_object_types.all():
+            object_type = object_type_category_object_type.object_type
+            status = (
+                object_type_category_object_type.object_type_category_object_type_status
+            )
+
+            if (
+                object_type_uuids_statuses_map.get(object_type.uuid)
+                and object_type_uuids_statuses_map.get(object_type.uuid)[1]
+                == ObjectTypeCategoryObjectTypeStatus.VISIBLE
+            ):
+                continue
+
+            object_type_uuids_statuses_map[object_type.uuid] = (object_type, status)
+
+    object_types_with_status = []
+
+    for object_type, status in object_type_uuids_statuses_map.values():
+        object_types_with_status.append((object_type, status))
+
+    return object_types_with_status

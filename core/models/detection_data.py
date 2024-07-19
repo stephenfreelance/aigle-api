@@ -50,3 +50,12 @@ class DetectionData(TimestampedModelMixin, UuidModelMixin, DeletableModelMixin):
         on_delete=models.SET_NULL,
         null=True,
     )
+
+    class Meta:
+        indexes = [
+            models.Index(fields=["detection_validation_status"]),
+            models.Index(fields=["detection_control_status"]),
+            models.Index(
+                fields=["detection_validation_status", "detection_control_status"]
+            ),
+        ]

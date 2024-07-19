@@ -14,3 +14,8 @@ class ObjectType(TimestampedModelMixin, UuidModelMixin, DeletableModelMixin):
     prescription_duration_years = models.IntegerField(
         validators=[MinValueValidator(0)], null=True
     )
+
+    class Meta:
+        indexes = [
+            models.Index(fields=["uuid"]),
+        ]

@@ -56,4 +56,6 @@ class TileSet(TimestampedModelMixin, UuidModelMixin, DeletableModelMixin):
             models.Index(fields=["tile_set_status"]),
             models.Index(fields=["tile_set_type"]),
             models.Index(fields=["date"]),
+            models.Index(fields=["tile_set_status", "date"]),
+            models.Index(fields=["uuid"]),
         ]

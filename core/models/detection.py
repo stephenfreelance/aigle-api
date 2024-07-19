@@ -56,4 +56,5 @@ class Detection(
             models.Index(fields=["uuid"]),
             models.Index(fields=["detection_source"]),
             models.Index(fields=["detection_object", "detection_data"]),
+            models.Index(fields=["detection_object", "detection_data", "tile_set"]),
         ]

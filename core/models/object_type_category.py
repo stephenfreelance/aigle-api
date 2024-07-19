@@ -11,4 +11,25 @@ from core.models.object_type import ObjectType
 
 class ObjectTypeCategory(TimestampedModelMixin, UuidModelMixin, DeletableModelMixin):
     name = models.CharField(max_length=DEFAULT_MAX_LENGTH, unique=True)
-    object_types = models.ManyToManyField(ObjectType, related_name="categories")
+
+
+class ObjectTypeCategoryObjectTypeStatus(models.TextChoices):
+    VISIBLE = "VISIBLE", "VISIBLE"
+    HIDDEN = "HIDDEN", "HIDDEN"
+
+
+class ObjectTypeCategoryObjectType(TimestampedModelMixin):
+    object_type_category = models.ForeignKey(
+        ObjectTypeCategory,
+        related_name="object_type_category_object_types",
+        on_delete=models.CASCADE,
+    )
+    object_type = models.ForeignKey(
+        ObjectType,
+        related_name="object_type_category_object_types",
+        on_delete=models.CASCADE,
+    )
+    object_type_category_object_type_status = models.CharField(
+        max_length=DEFAULT_MAX_LENGTH,
+        choices=ObjectTypeCategoryObjectTypeStatus.choices,
+    )

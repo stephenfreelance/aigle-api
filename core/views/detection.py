@@ -19,7 +19,10 @@ from core.serializers.detection import (
     DetectionMinimalSerializer,
     DetectionUpdateSerializer,
 )
-from core.utils.data_permissions import get_user_tile_sets
+from core.utils.data_permissions import (
+    get_user_object_types_with_status,
+    get_user_tile_sets,
+)
 from core.utils.filters import ChoiceInFilter, UuidInFilter
 from django.contrib.gis.geos import Polygon
 
@@ -27,7 +30,7 @@ BOOLEAN_CHOICES = (("false", "False"), ("true", "True"), ("null", "Null"))
 
 
 class DetectionFilter(FilterSet):
-    objectTypesUuids = UuidInFilter(method="search_object_types_uuids")
+    objectTypesUuids = UuidInFilter(method="pass_")
     tileSetsUuids = UuidInFilter(method="pass_")
     detectionValidationStatuses = ChoiceInFilter(
         field_name="detection_data__detection_validation_status",
@@ -80,6 +83,27 @@ class DetectionFilter(FilterSet):
 
     def filter_queryset(self, queryset):
         queryset = super().filter_queryset(queryset)
+
+        # filter object types
+
+        object_types_uuids = (
+            self.data.get("objectTypesUuids").split(",")
+            if self.data.get("objectTypesUuids")
+            else []
+        )
+
+        if not object_types_uuids:
+            object_types_with_status = get_user_object_types_with_status(
+                self.request.user
+            )
+            object_types_uuids = [
+                object_type_with_status[0].uuid
+                for object_type_with_status in object_types_with_status
+            ]
+
+        queryset = queryset.filter(
+            detection_object__object_type__uuid__in=object_types_uuids
+        )
 
         tile_sets_uuids = (
             self.data.get("tileSetsUuids").split(",")
@@ -147,12 +171,6 @@ class DetectionFilter(FilterSet):
             return queryset.filter(wheres[0])
 
         return queryset.filter(reduce(or_, wheres))
-
-    def search_object_types_uuids(self, queryset, name, value):
-        if not value:
-            return queryset
-
-        return queryset.filter(detection_object__object_type__uuid__in=value)
 
 
 class DetectionViewSet(BaseViewSetMixin[Detection]):
