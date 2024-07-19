@@ -3,10 +3,8 @@ from typing import List, Optional
 from core.models.detection_object import DetectionObject
 from core.models.object_type import ObjectType
 from core.models.tile_set import TileSet, TileSetType
-from core.models.user import UserRole
 from core.models.user_group import UserGroupRight
 from core.serializers import UuidTimestampedModelSerializerMixin
-from django.contrib.gis.db.models.aggregates import Union
 from django.contrib.gis.db.models.functions import Centroid
 
 from core.serializers.detection import (
@@ -18,7 +16,7 @@ from rest_framework import serializers
 
 from core.serializers.parcel import ParcelMinimalSerializer
 from core.serializers.tile_set import TileSetMinimalSerializer
-from core.utils.data_permissions import get_user_tile_sets
+from core.utils.data_permissions import get_user_group_rights, get_user_tile_sets
 from core.utils.prescription import compute_prescription
 
 
@@ -174,27 +172,9 @@ class DetectionObjectDetailSerializer(DetectionObjectSerializer):
 
     def get_user_group_rights(self, obj: DetectionObject):
         user = self.context["request"].user
+        point = Centroid(obj.detections.first().geometry)
 
-        if user.user_role == UserRole.SUPER_ADMIN:
-            return [
-                UserGroupRight.WRITE,
-                UserGroupRight.ANNOTATE,
-                UserGroupRight.READ,
-            ]
-
-        user_user_groups = user.user_user_groups.annotate(
-            union_geometry=Union("user_group__geo_zones__geometry")
-        )
-        user_user_groups = user_user_groups.filter(
-            union_geometry__contains=Centroid(obj.detections.first().geometry)
-        )
-
-        user_group_rights = set()
-
-        for user_user_group in user_user_groups:
-            user_group_rights.update(user_user_group.user_group_rights)
-
-        return list(user_group_rights)
+        return get_user_group_rights(user=user, point=point)
 
 
 class DetectionObjectInputSerializer(DetectionObjectSerializer):
@@ -213,8 +193,17 @@ class DetectionObjectInputSerializer(DetectionObjectSerializer):
                     object_type_uuid}"
             )
 
+        user = self.context["request"].user
+        centroid = Centroid(instance.detections.first().geometry)
+
+        get_user_group_rights(
+            user=user, point=centroid, raise_if_has_no_right=UserGroupRight.WRITE
+        )
+
         instance.object_type = object_type
         compute_prescription(instance)
+
+        instance.save()
 
         return instance
 

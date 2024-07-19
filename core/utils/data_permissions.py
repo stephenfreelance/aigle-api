@@ -4,12 +4,13 @@ from core.models.object_type import ObjectType
 from core.models.object_type_category import ObjectTypeCategoryObjectTypeStatus
 from core.models.tile_set import TileSet, TileSetStatus, TileSetType
 from core.models.user import UserRole
-from core.models.user_group import UserUserGroup
+from core.models.user_group import UserGroupRight, UserUserGroup
 from django.contrib.gis.db.models.functions import Intersection
 from django.db.models import Q
 from django.db.models import Count
 from django.contrib.gis.geos.collections import MultiPolygon
 
+from django.core.exceptions import PermissionDenied
 from django.contrib.gis.db.models.aggregates import Union
 
 from core.utils.postgis import GeometryType, GetGeometryType
@@ -145,3 +146,32 @@ def get_user_object_types_with_status(
         object_types_with_status.append((object_type, status))
 
     return object_types_with_status
+
+
+def get_user_group_rights(
+    user, point, raise_if_has_no_right: Optional[UserGroupRight] = None
+) -> List[UserGroupRight]:
+    if user.user_role == UserRole.SUPER_ADMIN:
+        return [
+            UserGroupRight.WRITE,
+            UserGroupRight.ANNOTATE,
+            UserGroupRight.READ,
+        ]
+
+    user_user_groups = user.user_user_groups.annotate(
+        union_geometry=Union("user_group__geo_zones__geometry")
+    )
+    user_user_groups = user_user_groups.filter(union_geometry__contains=point)
+
+    user_group_rights = set()
+
+    for user_user_group in user_user_groups:
+        user_group_rights.update(user_user_group.user_group_rights)
+
+    res = list(user_group_rights)
+
+    if raise_if_has_no_right:
+        if raise_if_has_no_right not in res:
+            raise PermissionDenied("Vous n'avez pas les droits pour éditer cette zone")
+
+    return res

@@ -10,6 +10,7 @@ from core.models.object_type import ObjectType
 from core.models.parcel import Parcel
 from core.models.tile import TILE_DEFAULT_ZOOM, Tile
 from core.models.tile_set import TileSet
+from core.models.user_group import UserGroupRight
 from core.serializers import UuidTimestampedModelSerializerMixin
 from core.serializers.detection_data import DetectionDataInputSerializer
 
@@ -20,6 +21,7 @@ from core.serializers.tile import TileSerializer
 from core.serializers.tile_set import TileSetMinimalSerializer
 from django.contrib.gis.db.models.functions import Centroid
 
+from core.utils.data_permissions import get_user_group_rights
 from core.utils.prescription import compute_prescription
 
 
@@ -120,6 +122,13 @@ class DetectionInputSerializer(DetectionSerializer):
     detection_object_uuid = serializers.UUIDField(write_only=True, required=False)
 
     def create(self, validated_data):
+        user = self.context["request"].user
+        centroid = Centroid(validated_data["geometry"])
+
+        get_user_group_rights(
+            user=user, point=centroid, raise_if_has_no_right=UserGroupRight.WRITE
+        )
+
         # create or retrieve detection object
 
         detection_object_uuid = validated_data.pop("detection_object_uuid", None)
@@ -136,8 +145,6 @@ class DetectionInputSerializer(DetectionSerializer):
                 raise serializers.ValidationError(
                     f"Tile set with following uuid not found: {tile_set_uuid}"
                 )
-
-        centroid = Centroid(validated_data["geometry"])
 
         tile = Tile.objects.filter(
             geometry__contains=centroid, z=TILE_DEFAULT_ZOOM
@@ -211,7 +218,7 @@ class DetectionInputSerializer(DetectionSerializer):
         ):
             detection_data.detection_prescription_status = None
 
-        detection_data.user_last_update = self.context["request"].user
+        detection_data.user_last_update = user
         detection_data.save()
 
         # create detection
@@ -242,6 +249,13 @@ class DetectionUpdateSerializer(DetectionSerializer):
     object_type_uuid = serializers.UUIDField(write_only=True)
 
     def update(self, instance: Detection, validated_data):
+        user = self.context["request"].user
+        centroid = Centroid(instance.geometry)
+
+        get_user_group_rights(
+            user=user, point=centroid, raise_if_has_no_right=UserGroupRight.WRITE
+        )
+
         object_type_uuid = validated_data.get("object_type_uuid")
 
         if object_type_uuid:

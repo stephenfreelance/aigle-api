@@ -1,7 +1,11 @@
 from core.models.detection_data import DetectionData
+from core.models.user_group import UserGroupRight
 from core.serializers import UuidTimestampedModelSerializerMixin
+from django.contrib.gis.db.models.functions import Centroid
 
 from rest_framework import serializers
+
+from core.utils.data_permissions import get_user_group_rights
 
 
 class DetectionDataSerializer(UuidTimestampedModelSerializerMixin):
@@ -28,10 +32,15 @@ class DetectionDataInputSerializer(DetectionDataSerializer):
         ]
 
     def update(self, instance, validated_data):
+        user = self.context["request"].user
+        centroid = Centroid(instance.detection.geometry)
+
+        get_user_group_rights(
+            user=user, point=centroid, raise_if_has_no_right=UserGroupRight.WRITE
+        )
+
         for key, value in validated_data.items():
             setattr(instance, key, value)
-
-        user = self.context["request"].user
 
         instance.user_last_update = user
         instance.save()
