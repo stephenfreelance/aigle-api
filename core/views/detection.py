@@ -141,24 +141,6 @@ class DetectionFilter(FilterSet):
         # Annotate the queryset with the centroid of the geometry
         queryset = queryset.annotate(centroid=Centroid("geometry"))
 
-        # filter custom zones
-
-        custom_zones_uuids = (
-            self.data.get("customZonesUuids").split(",")
-            if self.data.get("customZonesUuids")
-            else []
-        )
-
-        if custom_zones_uuids:
-            custom_zones = GeoCustomZone.objects.filter(uuid__in=custom_zones_uuids)
-
-            if custom_zones:
-                queryset = queryset.filter(
-                    centroid__within=custom_zones.aggregate(Union("geometry"))[
-                        "geometry__union"
-                    ]
-                )
-
         wheres = []
 
         for i in range(len(tile_sets)):
@@ -193,7 +175,26 @@ class DetectionFilter(FilterSet):
         if len(wheres) == 1:
             return queryset.filter(wheres[0])
 
-        return queryset.filter(reduce(or_, wheres))
+        queryset = queryset.filter(reduce(or_, wheres))
+
+        # filter custom zones
+
+        custom_zones_uuids = (
+            self.data.get("customZonesUuids").split(",")
+            if self.data.get("customZonesUuids")
+            else []
+        )
+
+        if custom_zones_uuids:
+            custom_zones = GeoCustomZone.objects.filter(uuid__in=custom_zones_uuids)
+
+            if custom_zones:
+                custom_zones_geometry = custom_zones.aggregate(
+                    geometry_union=Union("geometry")
+                )["geometry_union"]
+                queryset = queryset.filter(centroid__within=custom_zones_geometry)
+
+        return queryset
 
 
 class DetectionViewSet(BaseViewSetMixin[Detection]):
