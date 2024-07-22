@@ -1,6 +1,8 @@
 from django.db import connection
 from django.db.models import Func, CharField, TextChoices
 
+from django.contrib.gis.db import models as models_gis
+
 
 def ST_TileEnvelope(z: int, x: int, y: int):
     with connection.cursor() as cursor:
@@ -18,6 +20,21 @@ def ST_TileEnvelope(z: int, x: int, y: int):
         )
         row = cursor.fetchone()
         return row[0] if row else None
+
+
+class Simplify(Func):
+    function = "ST_Simplify"
+    output_field = models_gis.GeometryField()
+
+
+class SimplifyPreserveTopology(Func):
+    function = "ST_SimplifyPreserveTopology"
+    output_field = models_gis.GeometryField()
+
+
+class SimplifyVW(Func):
+    function = "ST_SimplifyVW"
+    output_field = models_gis.GeometryField()
 
 
 class GeometryType(TextChoices):

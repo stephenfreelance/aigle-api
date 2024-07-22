@@ -6,7 +6,7 @@ from core.contants.order_by import GEO_CUSTOM_ZONES_ORDER_BYS, TILE_SETS_ORDER_B
 from core.models.geo_custom_zone import GeoCustomZone, GeoCustomZoneStatus
 from core.models.tile_set import TileSet, TileSetStatus
 from core.models.user import UserRole
-from core.serializers.geo_custom_zone import GeoCustomZoneSerializer
+from core.serializers.geo_custom_zone import GeoCustomZoneGeoFeatureSerializer
 from core.serializers.map_settings import (
     MapSettingObjectTypeSerializer,
     MapSettingsSerializer,
@@ -15,6 +15,7 @@ from core.serializers.map_settings import (
 from core.serializers.object_type import ObjectTypeSerializer
 from core.serializers.tile_set import TileSetMinimalSerializer
 from django.contrib.gis.geos import GEOSGeometry
+from django.db.models import F
 
 from django.contrib.gis.db.models.aggregates import Union
 
@@ -22,6 +23,7 @@ from core.utils.data_permissions import (
     get_user_object_types_with_status,
     get_user_tile_sets,
 )
+from core.utils.postgis import SimplifyPreserveTopology
 
 
 class MapSettingsView(APIView):
@@ -82,15 +84,20 @@ class MapSettingsView(APIView):
             setting_object_type.is_valid()
             setting_object_types.append(setting_object_type.data)
 
-        geo_custom_zones_data = (
-            GeoCustomZone.objects.order_by(*GEO_CUSTOM_ZONES_ORDER_BYS)
-            .filter(geo_custom_zone_status=GeoCustomZoneStatus.ACTIVE)
-            .all()
-        )
+        geo_custom_zones_data = GeoCustomZone.objects.order_by(
+            *GEO_CUSTOM_ZONES_ORDER_BYS
+        ).filter(geo_custom_zone_status=GeoCustomZoneStatus.ACTIVE)
+        geo_custom_zones_data = geo_custom_zones_data.values(
+            "uuid", "name", "color", "geo_custom_zone_status"
+        ).annotate(geometry=SimplifyPreserveTopology(F("geometry"), 0.1))
+        geo_custom_zones_data = geo_custom_zones_data.all()
+
         geo_custom_zones = []
 
         for geo_custom_zone in geo_custom_zones_data:
-            geo_custom_zones.append(GeoCustomZoneSerializer(geo_custom_zone).data)
+            geo_custom_zones.append(
+                GeoCustomZoneGeoFeatureSerializer(geo_custom_zone).data
+            )
 
         setting = MapSettingsSerializer(
             data={
