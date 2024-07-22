@@ -173,9 +173,11 @@ class DetectionFilter(FilterSet):
                 break
 
         if len(wheres) == 1:
-            return queryset.filter(wheres[0])
+            queryset = queryset.filter(wheres[0])
+        else:
+            queryset = queryset.filter(reduce(or_, wheres))
 
-        queryset = queryset.filter(reduce(or_, wheres))
+        return queryset
 
         # filter custom zones
 
