@@ -1,6 +1,7 @@
 from common.views.base import BaseViewSetMixin
 
 
+from core.contants.order_by import GEO_CUSTOM_ZONES_ORDER_BYS
 from core.models.geo_custom_zone import GeoCustomZone
 from core.serializers.geo_custom_zone import (
     GeoCustomZoneDetailSerializer,
@@ -33,5 +34,5 @@ class GeoCustomZoneViewSet(BaseViewSetMixin[GeoCustomZone]):
         return GeoCustomZoneSerializer
 
     def get_queryset(self):
-        queryset = GeoCustomZone.objects.order_by("name")
+        queryset = GeoCustomZone.objects.order_by(*GEO_CUSTOM_ZONES_ORDER_BYS)
         return queryset.distinct()

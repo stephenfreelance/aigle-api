@@ -2,9 +2,11 @@ import json
 from rest_framework.views import APIView
 from rest_framework.response import Response
 
-from core.contants.order_by import TILE_SETS_ORDER_BYS
+from core.contants.order_by import GEO_CUSTOM_ZONES_ORDER_BYS, TILE_SETS_ORDER_BYS
+from core.models.geo_custom_zone import GeoCustomZone, GeoCustomZoneStatus
 from core.models.tile_set import TileSet, TileSetStatus
 from core.models.user import UserRole
+from core.serializers.geo_custom_zone import GeoCustomZoneGeoFeatureSerializer
 from core.serializers.map_settings import (
     MapSettingObjectTypeSerializer,
     MapSettingsSerializer,
@@ -77,7 +79,20 @@ class MapSettingsView(APIView):
                     "object_type_category_object_type_status": status,
                 }
             )
-            setting_object_types.append(setting_object_type.initial_data)
+            setting_object_type.is_valid()
+            setting_object_types.append(setting_object_type.data)
+
+        geo_custom_zones_data = (
+            GeoCustomZone.objects.order_by(*GEO_CUSTOM_ZONES_ORDER_BYS)
+            .filter(geo_custom_zone_status=GeoCustomZoneStatus.ACTIVE)
+            .all()
+        )
+        geo_custom_zones = []
+
+        for geo_custom_zone in geo_custom_zones_data:
+            geo_custom_zones.append(
+                GeoCustomZoneGeoFeatureSerializer(geo_custom_zone).data
+            )
 
         setting = MapSettingsSerializer(
             data={
@@ -86,6 +101,7 @@ class MapSettingsView(APIView):
                 "global_geometry": json.loads(GEOSGeometry(global_geometry).geojson)
                 if global_geometry
                 else None,
+                "geo_custom_zones": geo_custom_zones,
             }
         )
 

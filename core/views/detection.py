@@ -12,6 +12,7 @@ from core.models.detection_data import (
     DetectionPrescriptionStatus,
     DetectionValidationStatus,
 )
+from core.models.geo_custom_zone import GeoCustomZone
 from core.models.tile_set import TileSetType
 from core.serializers.detection import (
     DetectionDetailSerializer,
@@ -25,12 +26,14 @@ from core.utils.data_permissions import (
 )
 from core.utils.filters import ChoiceInFilter, UuidInFilter
 from django.contrib.gis.geos import Polygon
+from django.contrib.gis.db.models.aggregates import Union
 
 BOOLEAN_CHOICES = (("false", "False"), ("true", "True"), ("null", "Null"))
 
 
 class DetectionFilter(FilterSet):
     objectTypesUuids = UuidInFilter(method="pass_")
+    customZonesUuids = UuidInFilter(method="pass_")
     tileSetsUuids = UuidInFilter(method="pass_")
     detectionValidationStatuses = ChoiceInFilter(
         field_name="detection_data__detection_validation_status",
@@ -105,6 +108,8 @@ class DetectionFilter(FilterSet):
             detection_object__object_type__uuid__in=object_types_uuids
         )
 
+        # filter tile sets
+
         tile_sets_uuids = (
             self.data.get("tileSetsUuids").split(",")
             if self.data.get("tileSetsUuids")
@@ -135,6 +140,24 @@ class DetectionFilter(FilterSet):
 
         # Annotate the queryset with the centroid of the geometry
         queryset = queryset.annotate(centroid=Centroid("geometry"))
+
+        # filter custom zones
+
+        custom_zones_uuids = (
+            self.data.get("customZonesUuids").split(",")
+            if self.data.get("customZonesUuids")
+            else []
+        )
+
+        if custom_zones_uuids:
+            custom_zones = GeoCustomZone.objects.filter(uuid__in=custom_zones_uuids)
+
+            if custom_zones:
+                queryset = queryset.filter(
+                    centroid__within=custom_zones.aggregate(Union("geometry"))[
+                        "geometry__union"
+                    ]
+                )
 
         wheres = []
 

@@ -184,14 +184,17 @@ class DetectionObjectInputSerializer(DetectionObjectSerializer):
     object_type_uuid = serializers.UUIDField(write_only=True)
 
     def update(self, instance, validated_data):
-        object_type_uuid = validated_data.pop("object_type_uuid")
-        object_type = ObjectType.objects.filter(uuid=object_type_uuid).first()
+        object_type = None
+        object_type_uuid = validated_data.pop("object_type_uuid", None)
 
-        if not object_type:
-            raise serializers.ValidationError(
-                f"Object type with following uuid not found: {
-                    object_type_uuid}"
-            )
+        if object_type_uuid:
+            object_type = ObjectType.objects.filter(uuid=object_type_uuid).first()
+
+            if not object_type:
+                raise serializers.ValidationError(
+                    f"Object type with following uuid not found: {
+                        object_type_uuid}"
+                )
 
         user = self.context["request"].user
         centroid = Centroid(instance.detections.first().geometry)
@@ -200,8 +203,12 @@ class DetectionObjectInputSerializer(DetectionObjectSerializer):
             user=user, point=centroid, raise_if_has_no_right=UserGroupRight.WRITE
         )
 
-        instance.object_type = object_type
-        compute_prescription(instance)
+        if object_type:
+            instance.object_type = object_type
+            compute_prescription(instance)
+
+        for key, value in validated_data.items():
+            setattr(instance, key, value)
 
         instance.save()
 
