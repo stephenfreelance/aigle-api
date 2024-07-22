@@ -6,7 +6,7 @@ from core.contants.order_by import GEO_CUSTOM_ZONES_ORDER_BYS, TILE_SETS_ORDER_B
 from core.models.geo_custom_zone import GeoCustomZone, GeoCustomZoneStatus
 from core.models.tile_set import TileSet, TileSetStatus
 from core.models.user import UserRole
-from core.serializers.geo_custom_zone import GeoCustomZoneGeoFeatureSerializer
+from core.serializers.geo_custom_zone import GeoCustomZoneSerializer
 from core.serializers.map_settings import (
     MapSettingObjectTypeSerializer,
     MapSettingsSerializer,
@@ -90,9 +90,7 @@ class MapSettingsView(APIView):
         geo_custom_zones = []
 
         for geo_custom_zone in geo_custom_zones_data:
-            geo_custom_zones.append(
-                GeoCustomZoneGeoFeatureSerializer(geo_custom_zone).data
-            )
+            geo_custom_zones.append(GeoCustomZoneSerializer(geo_custom_zone).data)
 
         setting = MapSettingsSerializer(
             data={
