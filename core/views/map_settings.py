@@ -89,7 +89,7 @@ class MapSettingsView(APIView):
         ).filter(geo_custom_zone_status=GeoCustomZoneStatus.ACTIVE)
         geo_custom_zones_data = geo_custom_zones_data.values(
             "uuid", "name", "color", "geo_custom_zone_status"
-        ).annotate(geometry=SimplifyPreserveTopology(F("geometry"), 0.1))
+        ).annotate(geometry=SimplifyPreserveTopology(F("geometry"), 10))
         geo_custom_zones_data = geo_custom_zones_data.all()
 
         geo_custom_zones = []
