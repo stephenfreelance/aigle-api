@@ -34,6 +34,7 @@ class DetectionObjectViewSet(BaseViewSetMixin[DetectionObject]):
             "detections__detection_data",
             "object_type",
             "parcel",
+            "parcel__commune",
         )
         return queryset.distinct()
 

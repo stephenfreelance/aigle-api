@@ -14,24 +14,32 @@ from core.serializers.detection import (
 from core.serializers.object_type import ObjectTypeSerializer
 from rest_framework import serializers
 
-from core.serializers.parcel import ParcelMinimalSerializer
 from core.serializers.tile_set import TileSetMinimalSerializer
 from core.utils.data_permissions import get_user_group_rights, get_user_tile_sets
 from core.utils.prescription import compute_prescription
 
 
-class DetectionObjectSerializer(UuidTimestampedModelSerializerMixin):
+class DetectionObjectMinimalSerializer(UuidTimestampedModelSerializerMixin):
     class Meta(UuidTimestampedModelSerializerMixin.Meta):
         model = DetectionObject
         fields = UuidTimestampedModelSerializerMixin.Meta.fields + [
             "id",
             "address",
             "object_type",
+        ]
+
+    object_type = ObjectTypeSerializer(read_only=True)
+
+
+class DetectionObjectSerializer(DetectionObjectMinimalSerializer):
+    from core.serializers.parcel import ParcelMinimalSerializer
+
+    class Meta(DetectionObjectMinimalSerializer.Meta):
+        fields = DetectionObjectMinimalSerializer.Meta.fields + [
             "parcel",
         ]
 
     parcel = ParcelMinimalSerializer(read_only=True)
-    object_type = ObjectTypeSerializer(read_only=True)
 
 
 class DetectionHistorySerializer(serializers.Serializer):

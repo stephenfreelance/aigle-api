@@ -47,8 +47,24 @@ class ParcelViewSet(BaseViewSetMixin[Parcel]):
 
         return ParcelSerializer
 
+    def get_serializer_context(self):
+        context = {"request": self.request}
+
+        if self.request.GET.get("tileSetUuid"):
+            context["tile_set_uuid"] = self.request.GET.get("tileSetUuid")
+
+        return context
+
     def get_queryset(self):
         queryset = Parcel.objects.order_by("id")
+        queryset = queryset.prefetch_related("commune")
+
+        if self.action == "retrieve":
+            queryset = queryset.prefetch_related(
+                "detection_objects",
+                "detection_objects__detections",
+            )
+
         return queryset
 
     @action(methods=["get"], detail=False)
