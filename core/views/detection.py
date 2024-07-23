@@ -1,7 +1,7 @@
 from common.views.base import BaseViewSetMixin
 
 from operator import or_
-from django.db.models import Q
+from django.db.models import Q, OuterRef, Exists
 from functools import reduce
 from django_filters import FilterSet
 from django_filters import NumberFilter, ChoiceFilter
@@ -26,7 +26,6 @@ from core.utils.data_permissions import (
 )
 from core.utils.filters import ChoiceInFilter, UuidInFilter
 from django.contrib.gis.geos import Polygon
-from django.contrib.gis.db.models.aggregates import Union
 
 BOOLEAN_CHOICES = (("false", "False"), ("true", "True"), ("null", "Null"))
 
@@ -138,8 +137,10 @@ class DetectionFilter(FilterSet):
             filter_tile_set_uuid__in=tile_sets_uuids,
         )
 
+        centroid = Centroid("geometry")
+
         # Annotate the queryset with the centroid of the geometry
-        queryset = queryset.annotate(centroid=Centroid("geometry"))
+        queryset = queryset.annotate(centroid=centroid)
 
         wheres = []
 
@@ -177,8 +178,6 @@ class DetectionFilter(FilterSet):
         else:
             queryset = queryset.filter(reduce(or_, wheres))
 
-        return queryset
-
         # filter custom zones
 
         custom_zones_uuids = (
@@ -188,13 +187,10 @@ class DetectionFilter(FilterSet):
         )
 
         if custom_zones_uuids:
-            custom_zones = GeoCustomZone.objects.filter(uuid__in=custom_zones_uuids)
-
-            if custom_zones:
-                custom_zones_geometry = custom_zones.aggregate(
-                    geometry_union=Union("geometry")
-                )["geometry_union"]
-                queryset = queryset.filter(centroid__within=custom_zones_geometry)
+            custom_zones_subquery = GeoCustomZone.objects.filter(
+                uuid__in=custom_zones_uuids, geometry__contains=OuterRef("centroid")
+            )
+            queryset = queryset.filter(Exists(custom_zones_subquery))
 
         return queryset
 
