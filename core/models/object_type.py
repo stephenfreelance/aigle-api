@@ -16,6 +16,4 @@ class ObjectType(TimestampedModelMixin, UuidModelMixin, DeletableModelMixin):
     )
 
     class Meta:
-        indexes = [
-            models.Index(fields=["uuid"]),
-        ]
+        indexes = UuidModelMixin.Meta.indexes + []

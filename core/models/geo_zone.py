@@ -36,7 +36,7 @@ class GeoZone(TimestampedModelMixin, UuidModelMixin, DeletableModelMixin):
     )
 
     class Meta:
-        indexes = [
+        indexes = UuidModelMixin.Meta.indexes + [
             models.Index(fields=["id"], name="idx_geozone_id"),
         ]
 

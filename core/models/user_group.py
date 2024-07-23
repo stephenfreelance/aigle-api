@@ -21,6 +21,9 @@ class UserGroup(TimestampedModelMixin, UuidModelMixin, DeletableModelMixin):
         ObjectTypeCategory, related_name="user_groups"
     )
 
+    class Meta:
+        indexes = UuidModelMixin.Meta.indexes + []
+
 
 class UserGroupRight(models.TextChoices):
     WRITE = "WRITE", "WRITE"

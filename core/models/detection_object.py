@@ -24,3 +24,6 @@ class DetectionObject(
         null=True,
         on_delete=models.CASCADE,
     )
+
+    class Meta:
+        indexes = UuidModelMixin.Meta.indexes + []

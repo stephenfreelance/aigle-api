@@ -52,7 +52,7 @@ class DetectionData(TimestampedModelMixin, UuidModelMixin, DeletableModelMixin):
     )
 
     class Meta:
-        indexes = [
+        indexes = UuidModelMixin.Meta.indexes + [
             models.Index(fields=["detection_validation_status"]),
             models.Index(fields=["detection_control_status"]),
             models.Index(

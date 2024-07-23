@@ -12,6 +12,9 @@ from core.models.object_type import ObjectType
 class ObjectTypeCategory(TimestampedModelMixin, UuidModelMixin, DeletableModelMixin):
     name = models.CharField(max_length=DEFAULT_MAX_LENGTH, unique=True)
 
+    class Meta:
+        indexes = UuidModelMixin.Meta.indexes + []
+
 
 class ObjectTypeCategoryObjectTypeStatus(models.TextChoices):
     VISIBLE = "VISIBLE", "VISIBLE"
