@@ -11,6 +11,7 @@ from common.models.deletable import DeletableModelMixin
 from common.models.timestamped import TimestampedModelMixin
 from common.models.uuid import UuidModelMixin
 from core.managers.user import UserManager
+from django.contrib.gis.db import models as models_gis
 
 
 class UserRole(models.TextChoices):
@@ -47,6 +48,7 @@ class User(
         choices=UserRole.choices,
         default=UserRole.REGULAR,
     )
+    last_position = models_gis.PointField(null=True, blank=True)
 
     objects = UserManager()
 

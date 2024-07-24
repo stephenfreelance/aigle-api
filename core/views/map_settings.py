@@ -104,6 +104,7 @@ class MapSettingsView(APIView):
                 if global_geometry
                 else None,
                 "geo_custom_zones": geo_custom_zones,
+                "user_last_position": request.user.last_position,
             }
         )
 

@@ -15,6 +15,9 @@ class ParcelFilter(FilterSet):
     sectionQ = CharFilter(method="search_section")
     numParcelQ = CharFilter(method="search_num_parcel")
 
+    section = CharFilter(field_name="section")
+    numParcel = CharFilter(field_name="num_parcel")
+
     class Meta:
         model = Parcel
         fields = ["communeUuids", "sectionQ", "numParcelQ"]

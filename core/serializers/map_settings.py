@@ -24,3 +24,4 @@ class MapSettingsSerializer(serializers.Serializer):
     object_type_settings = MapSettingObjectTypeSerializer(many=True)
     global_geometry = models_gis.GeometryField(null=True)
     geo_custom_zones = GeoCustomZoneSerializer(many=True)
+    user_last_position = models_gis.PointField(null=True)

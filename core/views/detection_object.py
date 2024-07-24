@@ -11,6 +11,8 @@ from core.serializers.detection_object import (
 )
 from rest_framework.decorators import action
 
+from core.views.utils.save_user_position import save_user_position
+
 
 class DetectionObjectViewSet(BaseViewSetMixin[DetectionObject]):
     def get_serializer_class(self):
@@ -37,6 +39,18 @@ class DetectionObjectViewSet(BaseViewSetMixin[DetectionObject]):
             "parcel__commune",
         )
         return queryset.distinct()
+
+    def retrieve(self, request, *args, **kwargs):
+        instance = self.get_object()
+        serializer = self.get_serializer(instance)
+
+        try:
+            last_position = instance.detections.all()[0].geometry.centroid
+            save_user_position(user=request.user, last_position=last_position)
+        except Exception:
+            pass
+
+        return Response(serializer.data)
 
     @action(methods=["get"], detail=True)
     def history(self, request, uuid):

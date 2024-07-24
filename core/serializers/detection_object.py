@@ -96,6 +96,8 @@ class DetectionObjectTileSetPreview(serializers.Serializer):
 
 
 class DetectionObjectDetailSerializer(DetectionObjectSerializer):
+    from core.serializers.parcel import ParcelSerializer
+
     class Meta(DetectionObjectSerializer.Meta):
         fields = DetectionObjectSerializer.Meta.fields + [
             "id",
@@ -107,6 +109,7 @@ class DetectionObjectDetailSerializer(DetectionObjectSerializer):
     detections = serializers.SerializerMethodField()
     tile_sets = serializers.SerializerMethodField()
     user_group_rights = serializers.SerializerMethodField()
+    parcel = ParcelSerializer(read_only=True)
 
     def get_detections(self, obj: DetectionObject):
         user = self.context["request"].user
