@@ -40,23 +40,30 @@ class DetectionRowSerializer(serializers.Serializer):
     detection_control_status = serializers.ChoiceField(
         choices=DetectionControlStatus.choices,
         required=False,
+        allow_null=True,
         default=DetectionControlStatus.NOT_CONTROLLED,
     )
     detection_validation_status = serializers.ChoiceField(
         choices=DetectionValidationStatus.choices,
         required=False,
+        allow_null=True,
         default=DetectionValidationStatus.DETECTED_NOT_VERIFIED,
     )
     detection_prescription_status = serializers.ChoiceField(
         choices=DetectionPrescriptionStatus.choices,
         required=False,
+        allow_null=True,
     )
     detection_source = serializers.ChoiceField(
         choices=DetectionSource.choices,
         required=False,
+        allow_null=True,
         default=DetectionSource.ANALYSIS,
     )
-    user_reviewed = serializers.BooleanField(default=False)
+    user_reviewed = serializers.BooleanField(
+        default=False,
+        allow_null=True,
+    )
     tile_x = serializers.IntegerField(required=False, allow_null=True)
     tile_y = serializers.IntegerField(required=False, allow_null=True)
 
@@ -300,10 +307,12 @@ class Command(BaseCommand):
         # detection data
 
         detection_data = DetectionData(
-            detection_control_status=serialized_detection["detection_control_status"],
+            detection_control_status=serialized_detection["detection_control_status"]
+            or DetectionControlStatus.NOT_CONTROLLED,
             detection_validation_status=serialized_detection[
                 "detection_validation_status"
-            ],
+            ]
+            or DetectionValidationStatus.DETECTED_NOT_VERIFIED,
             detection_prescription_status=serialized_detection[
                 "detection_prescription_status"
             ],
@@ -319,7 +328,8 @@ class Command(BaseCommand):
         detection = Detection(
             geometry=geometry,
             score=serialized_detection["score"],
-            detection_source=serialized_detection["detection_source"],
+            detection_source=serialized_detection["detection_source"]
+            or DetectionSource.ANALYSIS,
             auto_prescribed=False,
             tile=tile,
             tile_set=self.tile_set,
@@ -377,10 +387,12 @@ class Command(BaseCommand):
 
         if self.total:
             print(
-                f"Inserted {self.total_inserted_detections}/{self.total} detections in total"
+                f"Inserted {
+                    self.total_inserted_detections}/{self.total} detections in total"
             )
         else:
-            print(f"Inserted {self.total_inserted_detections} detections in total")
+            print(f"Inserted {
+                  self.total_inserted_detections} detections in total")
 
         print(f"Elapsed time: {datetime.now() - self.start_time}")
 
