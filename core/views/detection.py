@@ -149,8 +149,10 @@ class DetectionFilter(FilterSet):
             previous_tile_sets = tile_sets[:i]
 
             if tile_set.intersection:
-                where = Q(tile_set__uuid=tile_set.uuid) & Q(
-                    centroid__intersects=tile_set.intersection
+                where = (
+                    Q(tile_set__uuid=tile_set.uuid)
+                    & Q(centroid__intersects=tile_set.intersection)
+                    & Q(centroid__intersects=polygon_requested)
                 )
             else:
                 if global_geometry:
