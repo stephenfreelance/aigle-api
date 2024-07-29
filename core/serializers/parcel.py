@@ -1,3 +1,4 @@
+import json
 from core.contants.order_by import GEO_CUSTOM_ZONES_ORDER_BYS
 from core.models.detection_object import DetectionObject
 from core.models.geo_custom_zone import GeoCustomZone, GeoCustomZoneStatus
@@ -7,6 +8,7 @@ from core.serializers.detection import DetectionWithTileSerializer
 from core.serializers.geo_commune import GeoCommuneSerializer
 from core.serializers.detection_object import DetectionObjectMinimalSerializer
 
+from django.contrib.gis.geos import GEOSGeometry
 from rest_framework import serializers
 
 from core.serializers.geo_custom_zone import GeoCustomZoneSerializer
@@ -61,10 +63,17 @@ class ParcelDetailSerializer(ParcelSerializer):
         fields = ParcelSerializer.Meta.fields + [
             "detection_objects",
             "custom_geo_zones",
+            "commune",
+            "commune_envelope",
         ]
 
+    commune = GeoCommuneSerializer(read_only=True)
     detection_objects = ParcelDetectionObjectSerializer(many=True)
     custom_geo_zones = serializers.SerializerMethodField()
+    commune_envelope = serializers.SerializerMethodField()
+
+    def get_commune_envelope(self, obj: Parcel):
+        return json.loads(GEOSGeometry(obj.commune.geometry.envelope).geojson)
 
     def get_custom_geo_zones(self, obj: Parcel):
         geo_custom_zones_data = GeoCustomZone.objects.order_by(
