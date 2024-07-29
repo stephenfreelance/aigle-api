@@ -44,4 +44,4 @@ class ObjectTypeCategoryViewSet(
 
     def get_queryset(self):
         queryset = ObjectTypeCategory.objects.order_by("name")
-        return queryset.distinct()
+        return queryset

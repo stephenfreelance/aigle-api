@@ -38,4 +38,4 @@ class UserViewSet(
     def get_queryset(self):
         queryset = UserModel.objects.order_by("-id")
 
-        return queryset.distinct()
+        return queryset

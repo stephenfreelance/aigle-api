@@ -53,4 +53,4 @@ class GeoCommuneViewSet(BaseViewSetMixin[GeoCommune]):
 
     def get_queryset(self):
         queryset = GeoCommune.objects.order_by("iso_code")
-        return queryset.distinct()
+        return queryset

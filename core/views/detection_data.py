@@ -17,4 +17,4 @@ class DetectionDataViewSet(BaseViewSetMixin[DetectionData]):
 
     def get_queryset(self):
         queryset = DetectionData.objects.order_by("-user_last_update")
-        return queryset.distinct()
+        return queryset

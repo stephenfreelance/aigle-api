@@ -307,12 +307,10 @@ class Command(BaseCommand):
         # detection data
 
         detection_data = DetectionData(
-            detection_control_status=serialized_detection["detection_control_status"]
-            or DetectionControlStatus.NOT_CONTROLLED,
+            detection_control_status=serialized_detection["detection_control_status"],
             detection_validation_status=serialized_detection[
                 "detection_validation_status"
-            ]
-            or DetectionValidationStatus.DETECTED_NOT_VERIFIED,
+            ],
             detection_prescription_status=serialized_detection[
                 "detection_prescription_status"
             ],
@@ -321,7 +319,35 @@ class Command(BaseCommand):
         if serialized_detection["user_reviewed"]:
             detection_data.user_last_update = self.user_reviewer
 
-        self.detection_datas_to_insert.append(detection_data)
+        # detection object
+
+        if linked_detections:
+            linked_detection = linked_detections[0]
+            detection_object = linked_detection.detection_object
+
+            if not detection_object.address and serialized_detection["address"]:
+                detection_object.address = serialized_detection["address"]
+                detection_object.save()
+
+            if not detection_data.detection_control_status:
+                detection_data.detection_control_status = (
+                    linked_detection.detection_data.detection_control_status
+                )
+
+            if not detection_data.detection_validation_status:
+                detection_data.detection_validation_status = (
+                    linked_detection.detection_data.detection_validation_status
+                )
+        else:
+            parcel = Parcel.objects.filter(geometry__contains=centroid).first()
+            detection_object = DetectionObject(
+                object_type=object_type,
+                parcel=parcel,
+                address=serialized_detection["address"],
+                batch_id=self.batch_id,
+                import_id=serialized_detection["id"],
+            )
+            self.detection_objects_to_insert.append(detection_object)
 
         # detection
 
@@ -338,28 +364,10 @@ class Command(BaseCommand):
             import_id=serialized_detection["id"],
         )
 
-        self.detections_to_insert.append(detection)
-
-        # detection object
-
-        if linked_detections:
-            detection_object = linked_detections[0].detection_object
-
-            if not detection_object.address and serialized_detection["address"]:
-                detection_object.address = serialized_detection["address"]
-                detection_object.save()
-        else:
-            parcel = Parcel.objects.filter(geometry__contains=centroid).first()
-            detection_object = DetectionObject(
-                object_type=object_type,
-                parcel=parcel,
-                address=serialized_detection["address"],
-                batch_id=self.batch_id,
-                import_id=serialized_detection["id"],
-            )
-            self.detection_objects_to_insert.append(detection_object)
-
         detection.detection_object = detection_object
+
+        self.detection_datas_to_insert.append(detection_data)
+        self.detections_to_insert.append(detection)
 
     def insert_detections(self, force=False):
         if (

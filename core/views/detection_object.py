@@ -38,7 +38,7 @@ class DetectionObjectViewSet(BaseViewSetMixin[DetectionObject]):
             "parcel",
             "parcel__commune",
         )
-        return queryset.distinct()
+        return queryset
 
     def retrieve(self, request, *args, **kwargs):
         instance = self.get_object()

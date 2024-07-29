@@ -33,4 +33,4 @@ class UserGroupViewSet(BaseViewSetMixin[UserGroup]):
 
     def get_queryset(self):
         queryset = UserGroup.objects.order_by("name")
-        return queryset.distinct()
+        return queryset

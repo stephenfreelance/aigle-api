@@ -28,7 +28,7 @@ GEO_CLASS_NAMES_GEO_ZONE_TYPES_MAP = {
 class GeoZone(TimestampedModelMixin, UuidModelMixin, DeletableModelMixin):
     name = models.CharField(max_length=DEFAULT_MAX_LENGTH)
     name_normalized = models.CharField(max_length=DEFAULT_MAX_LENGTH)
-    geometry = models_gis.GeometryField()
+    geometry = models_gis.GeometryField(null=True)
     geo_zone_type = models.CharField(
         max_length=DEFAULT_MAX_LENGTH,
         choices=GeoZoneType.choices,

@@ -53,7 +53,7 @@ class DetectionFilter(FilterSet):
     swLat = NumberFilter(method="pass_")
     swLng = NumberFilter(method="pass_")
 
-    score = NumberFilter(field_name="score", lookup_expr="gte")
+    score = NumberFilter(method="filter_score")
     prescripted = ChoiceFilter(choices=BOOLEAN_CHOICES, method="filter_prescripted")
 
     def pass_(self, queryset, name, value):
@@ -64,8 +64,11 @@ class DetectionFilter(FilterSet):
         fields = ["neLat", "neLng", "swLat", "swLng", "tileSetsUuids"]
         geo_field = "geometry"
 
-    def search_tile_sets_uuids(self, queryset, name, value):
-        return queryset
+    def filter_score(self, queryset, name, value):
+        if not value:
+            return queryset
+
+        return queryset.filter(score__gte=value)
 
     def filter_prescripted(self, queryset, name, value):
         if value == "null":
@@ -219,4 +222,4 @@ class DetectionViewSet(BaseViewSetMixin[Detection]):
         queryset = queryset.prefetch_related(
             "detection_object", "detection_object__object_type", "tile", "tile_set"
         ).select_related("detection_data")
-        return queryset.distinct()
+        return queryset

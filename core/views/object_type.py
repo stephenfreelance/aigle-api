@@ -45,4 +45,4 @@ class ObjectTypeViewSet(BaseViewSetMixin[ObjectType]):
 
     def get_queryset(self):
         queryset = ObjectType.objects.order_by("name")
-        return queryset.distinct()
+        return queryset

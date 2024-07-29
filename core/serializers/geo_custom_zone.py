@@ -1,4 +1,4 @@
-from core.models.geo_custom_zone import GeoCustomZone
+from core.models.geo_custom_zone import GeoCustomZone, GeoCustomZoneStatus
 from core.serializers import UuidTimestampedModelSerializerMixin
 from rest_framework_gis.serializers import GeoFeatureModelSerializer
 
@@ -23,6 +23,24 @@ class GeoCustomZoneSerializer(UuidTimestampedModelSerializerMixin):
             "color",
             "geo_custom_zone_status",
         ]
+
+    def update(self, *args, **kwargs):
+        instance = super().update(*args, **kwargs)
+
+        if not instance.geometry:
+            instance.geo_custom_zone_status = GeoCustomZoneStatus.INACTIVE
+            instance.save()
+
+        return instance
+
+    def save(self, *args, **kwargs):
+        instance = super().save(*args, **kwargs)
+
+        if not instance.geometry:
+            instance.geo_custom_zone_status = GeoCustomZoneStatus.INACTIVE
+            instance.save()
+
+        return instance
 
 
 class GeoCustomZoneDetailSerializer(GeoCustomZoneSerializer):

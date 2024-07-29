@@ -47,4 +47,4 @@ class TileSetViewSet(BaseViewSetMixin[TileSet]):
 
     def get_queryset(self):
         queryset = TileSet.objects.order_by(*TILE_SETS_ORDER_BYS)
-        return queryset.distinct()
+        return queryset

@@ -52,4 +52,4 @@ class GeoCustomZoneViewSet(BaseViewSetMixin[GeoCustomZone]):
                 geometry=SimplifyPreserveTopology(F("geometry"), 10)
             )
 
-        return queryset.distinct()
+        return queryset

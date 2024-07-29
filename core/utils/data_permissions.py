@@ -93,7 +93,7 @@ def get_user_tile_sets(
     if filter_tile_set_uuid__in:
         tile_sets = tile_sets.filter(uuid__in=filter_tile_set_uuid__in)
 
-    return tile_sets.distinct(), final_union
+    return tile_sets, final_union
 
 
 def get_user_object_types_with_status(

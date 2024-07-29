@@ -54,4 +54,4 @@ class GeoRegionViewSet(BaseViewSetMixin[GeoRegion]):
 
     def get_queryset(self):
         queryset = GeoRegion.objects.order_by("insee_code")
-        return queryset.distinct()
+        return queryset

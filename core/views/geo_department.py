@@ -56,4 +56,4 @@ class GeoDepartmentViewSet(BaseViewSetMixin[GeoDepartment]):
 
     def get_queryset(self):
         queryset = GeoDepartment.objects.order_by("insee_code")
-        return queryset.distinct()
+        return queryset
