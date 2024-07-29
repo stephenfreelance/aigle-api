@@ -75,6 +75,9 @@ DJOSER = {
     "SERIALIZERS": {
         "current_user": "core.serializers.user.UserSerializer",
     },
+    "PERMISSIONS": {
+        "user_create": ["djoser.permissions.CurrentUserOrAdmin"],
+    },
 }
 
 MIDDLEWARE = [

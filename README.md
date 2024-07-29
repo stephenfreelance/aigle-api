@@ -5,16 +5,18 @@
 ### Set up docker
 
 1. Create local volume to persist db data:
+
 ```
 docker volume create aigle_data
 ```
+
 2. Create `.env` and `.env.compose` from templates
 3. Build and run docker containers:
+
 ```
 docker build -f Dockerfile -t aigle_api_app_container .
 docker-compose --env-file .env -f docker-compose.yml up --force-recreate -d db app
 ```
-
 
 ## Django
 
@@ -27,9 +29,11 @@ python manage.py startapp my_app
 ### Authentication
 
 Authentication in this project is managed with [djoser](https://djoser.readthedocs.io/en/latest/getting_started.html)
-- Create a user: `POST` request on `/auth/users/`
-- Create a token: `/auth/jwt/create/` and then add received token in header `Authorization` `JWT {token}`
-- Check you are connected: `/auth/users/me/`
+You can create a user by running command:
+
+```
+python manage.py create_super_admin --email myemail@email.com --password mypassword
+```
 
 ### Development
 
@@ -38,23 +42,27 @@ Authentication in this project is managed with [djoser](https://djoser.readthedo
 This project is meant to be used with Python 3.12.3.
 
 1. Create a virtual environment and activate it (here an example with `venv`)
+
 ```
 python3 -m venv venv
 source venv/bin/activate
 ```
 
 2. Install dependencies
+
 ```
 pip3 install -r requirements.txt
 ```
 
 3. Create `.env` and `.env.compose` file and replace values
+
 ```
 cp .env.template .env
 cp .env.compose.template .env.compose
 ```
 
 4. Run local server
+
 ```
 source .env && source venv/bin/activate && make start
 ```
