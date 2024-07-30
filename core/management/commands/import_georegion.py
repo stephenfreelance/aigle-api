@@ -56,8 +56,8 @@ class Command(BaseCommand):
             geometry.transform(2154, 4326)
 
             region = GeoRegion(
-                name=f"test_{properties["nom"]}",
-                insee_code=f"test_{properties["code_insee"]}",
+                name=properties["nom"],
+                insee_code=properties["code_insee"],
                 surface_km2=properties["surf_km2"],
                 geometry=geometry,
             )
