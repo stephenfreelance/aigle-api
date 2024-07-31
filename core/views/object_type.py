@@ -30,7 +30,9 @@ class ObjectTypeFilter(FilterSet):
         if not value:
             return queryset
 
-        return queryset.filter(Q(categories__uuid__in=value))
+        return queryset.filter(
+            Q(object_type_category_object_types__object_type_category__uuid__in=value)
+        )
 
 
 class ObjectTypeViewSet(BaseViewSetMixin[ObjectType]):

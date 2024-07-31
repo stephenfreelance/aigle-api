@@ -27,7 +27,9 @@ class ObjectTypeCategoryFilter(FilterSet):
         if not value:
             return queryset
 
-        return queryset.filter(object_types__uuid__in=value)
+        return queryset.filter(
+            object_type_category_object_types__object_type__uuid__in=value
+        )
 
 
 class ObjectTypeCategoryViewSet(

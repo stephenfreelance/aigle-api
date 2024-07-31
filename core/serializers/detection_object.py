@@ -1,6 +1,8 @@
 from django.utils import timezone
 from typing import List, Optional
+from core.contants.order_by import GEO_CUSTOM_ZONES_ORDER_BYS
 from core.models.detection_object import DetectionObject
+from core.models.geo_custom_zone import GeoCustomZone, GeoCustomZoneStatus
 from core.models.object_type import ObjectType
 from core.models.tile_set import TileSet, TileSetType
 from core.models.user_group import UserGroupRight
@@ -11,6 +13,7 @@ from core.serializers.detection import (
     DetectionWithTileMinimalSerializer,
     DetectionWithTileSerializer,
 )
+from core.serializers.geo_custom_zone import GeoCustomZoneSerializer
 from core.serializers.object_type import ObjectTypeSerializer
 from rest_framework import serializers
 
@@ -104,12 +107,14 @@ class DetectionObjectDetailSerializer(DetectionObjectSerializer):
             "detections",
             "tile_sets",
             "user_group_rights",
+            "custom_geo_zones"
         ]
 
     detections = serializers.SerializerMethodField()
     tile_sets = serializers.SerializerMethodField()
     user_group_rights = serializers.SerializerMethodField()
     parcel = ParcelSerializer(read_only=True)
+    custom_geo_zones = serializers.SerializerMethodField()
 
     def get_detections(self, obj: DetectionObject):
         user = self.context["request"].user
@@ -187,6 +192,25 @@ class DetectionObjectDetailSerializer(DetectionObjectSerializer):
 
         return get_user_group_rights(user=user, point=point)
 
+
+    def get_custom_geo_zones(self, obj: DetectionObject):
+        geo_custom_zones_data = GeoCustomZone.objects.order_by(
+            *GEO_CUSTOM_ZONES_ORDER_BYS
+        ).filter(geo_custom_zone_status=GeoCustomZoneStatus.ACTIVE)
+        geo_custom_zones_data = geo_custom_zones_data.filter(
+            geometry__intersects=obj.detections.all()[0].geometry
+        )
+        geo_custom_zones_data = geo_custom_zones_data.values(
+            "uuid", "name", "color", "geo_custom_zone_status"
+        )
+        geo_custom_zones_data = geo_custom_zones_data.all()
+
+        geo_custom_zones = []
+
+        for geo_custom_zone in geo_custom_zones_data:
+            geo_custom_zones.append(GeoCustomZoneSerializer(geo_custom_zone).data)
+
+        return geo_custom_zones
 
 class DetectionObjectInputSerializer(DetectionObjectSerializer):
     class Meta(DetectionObjectSerializer.Meta):
