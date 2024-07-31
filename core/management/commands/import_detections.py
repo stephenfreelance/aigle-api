@@ -349,6 +349,13 @@ class Command(BaseCommand):
             )
             self.detection_objects_to_insert.append(detection_object)
 
+
+            if not detection_data.detection_control_status:
+                detection_data.detection_control_status = DetectionControlStatus.NOT_CONTROLLED
+
+            if not detection_data.detection_validation_status:
+                detection_data.detection_validation_status = DetectionValidationStatus.DETECTED_NOT_VERIFIED
+
         # detection
 
         detection = Detection(
