@@ -164,7 +164,7 @@ class DetectionFilter(FilterSet):
                     )
 
             for previous_tile_set in previous_tile_sets:
-                where = where & ~Q(geometry__intersect=previous_tile_set.intersection)
+                where = where & ~Q(geometry__intersects=previous_tile_set.intersection)
 
             wheres.append(where)
 
