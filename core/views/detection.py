@@ -128,7 +128,6 @@ class DetectionFilter(FilterSet):
 
         if not ne_lat or not ne_lng or not sw_lat or not sw_lng:
             return queryset
-
         polygon_requested = Polygon.from_bbox((sw_lng, sw_lat, ne_lng, ne_lat))
         polygon_requested.srid = 4326
 

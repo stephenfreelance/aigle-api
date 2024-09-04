@@ -42,8 +42,14 @@ def get_user_tile_sets(
         user_user_groups_with_geo_union = UserUserGroup.objects.filter(
             user=user
         ).prefetch_related("user_group__object_type_categories__object_types")
+
+        geo_union = Union("user_group__geo_zones__geometry")
+
+        if filter_tile_set_intersects_geometry:
+            geo_union = Intersection(geo_union, filter_tile_set_intersects_geometry)
+
         user_user_groups_with_geo_union = user_user_groups_with_geo_union.annotate(
-            geo_union=Union("user_group__geo_zones__geometry")
+            geo_union=geo_union
         )
 
         final_union = user_user_groups_with_geo_union.aggregate(
@@ -60,15 +66,6 @@ def get_user_tile_sets(
     ).order_by(*order_bys)
 
     union_geometry = Union("geo_zones__geometry")
-
-    if filter_tile_set_intersects_geometry:
-        union_geometry = Intersection(
-            filter_tile_set_intersects_geometry, union_geometry
-        )
-        intersection = Intersection(filter_tile_set_intersects_geometry, intersection)
-        union_geometry = Intersection(
-            filter_tile_set_intersects_geometry, union_geometry
-        )
 
     tile_sets = tile_sets.annotate(
         union_geometry=union_geometry,
