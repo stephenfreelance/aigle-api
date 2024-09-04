@@ -149,7 +149,7 @@ class DetectionFilter(FilterSet):
                 where = (
                     Q(tile_set__uuid=tile_set.uuid)
                     & Q(geometry__intersects=tile_set.intersection)
-                    & Q(geometryd__intersects=polygon_requested)
+                    & Q(geometry__intersects=polygon_requested)
                 )
             else:
                 if global_geometry:
