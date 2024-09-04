@@ -139,11 +139,6 @@ class DetectionFilter(FilterSet):
             filter_tile_set_uuid__in=tile_sets_uuids,
         )
 
-        centroid = Centroid("geometry")
-
-        # Annotate the queryset with the centroid of the geometry
-        queryset = queryset.annotate(centroid=centroid)
-
         wheres = []
 
         for i in range(len(tile_sets)):
@@ -153,23 +148,23 @@ class DetectionFilter(FilterSet):
             if tile_set.intersection:
                 where = (
                     Q(tile_set__uuid=tile_set.uuid)
-                    & Q(centroid__intersects=tile_set.intersection)
-                    & Q(centroid__intersects=polygon_requested)
+                    & Q(geometry__intersects=tile_set.intersection)
+                    & Q(geometryd__intersects=polygon_requested)
                 )
             else:
                 if global_geometry:
                     where = (
                         Q(tile_set__uuid=tile_set.uuid)
-                        & Q(centroid__intersects=polygon_requested)
-                        & Q(centroid__within=global_geometry)
+                        & Q(geometry__intersects=polygon_requested)
+                        & Q(geometry__within=global_geometry)
                     )
                 else:
                     where = Q(tile_set__uuid=tile_set.uuid) & Q(
-                        centroid__intersects=polygon_requested
+                        geometry__intersects=polygon_requested
                     )
 
             for previous_tile_set in previous_tile_sets:
-                where = where & ~Q(centroid__within=previous_tile_set.intersection)
+                where = where & ~Q(geometry__intersect=previous_tile_set.intersection)
 
             wheres.append(where)
 
