@@ -58,8 +58,20 @@ def get_user_tile_sets(
         tile_set_status__in=filter_tile_set_status__in,
         tile_set_type__in=filter_tile_set_type__in,
     ).order_by(*order_bys)
+
+    union_geometry = Union("geo_zones__geometry")
+
+    if filter_tile_set_intersects_geometry:
+        union_geometry = Intersection(
+            filter_tile_set_intersects_geometry, union_geometry
+        )
+        intersection = Intersection(filter_tile_set_intersects_geometry, intersection)
+        union_geometry = Intersection(
+            filter_tile_set_intersects_geometry, union_geometry
+        )
+
     tile_sets = tile_sets.annotate(
-        union_geometry=Union("geo_zones__geometry"),
+        union_geometry=union_geometry,
         intersection=intersection,
         geo_zones_count=Count("geo_zones"),
         intersection_type=GetGeometryType("intersection"),
