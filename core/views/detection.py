@@ -1,7 +1,7 @@
 from common.views.base import BaseViewSetMixin
 
 from operator import or_
-from django.db.models import Q, OuterRef, Exists
+from django.db.models import Q
 from functools import reduce
 from django_filters import FilterSet
 from django_filters import NumberFilter, ChoiceFilter
@@ -12,7 +12,6 @@ from core.models.detection_data import (
     DetectionPrescriptionStatus,
     DetectionValidationStatus,
 )
-from core.models.geo_custom_zone import GeoCustomZone
 from core.models.tile_set import TileSetType
 from core.serializers.detection import (
     DetectionDetailSerializer,
@@ -192,10 +191,9 @@ class DetectionFilter(FilterSet):
         )
 
         if custom_zones_uuids:
-            custom_zones_subquery = GeoCustomZone.objects.filter(
-                uuid__in=custom_zones_uuids, geometry__contains=OuterRef("centroid")
+            queryset = queryset.filter(
+                detection_object__geo_custom_zones__uuid__in=custom_zones_uuids
             )
-            queryset = queryset.filter(Exists(custom_zones_subquery))
 
         return queryset
 

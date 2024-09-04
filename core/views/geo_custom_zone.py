@@ -11,7 +11,6 @@ from django_filters import FilterSet, CharFilter
 from django.db.models import F
 
 from core.utils.permissions import AdminRolePermission
-from core.utils.postgis import SimplifyPreserveTopology
 
 
 class GeoCustomZoneFilter(FilterSet):
@@ -48,8 +47,6 @@ class GeoCustomZoneViewSet(BaseViewSetMixin[GeoCustomZone]):
                 "created_at",
                 "updated_at",
             )
-            queryset = queryset.annotate(
-                geometry=SimplifyPreserveTopology(F("geometry"), 10)
-            )
+            queryset = queryset.annotate(geometry=F("geometry_simplified"))
 
         return queryset

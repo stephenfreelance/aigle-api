@@ -6,6 +6,7 @@ from common.models.deletable import DeletableModelMixin
 from common.models.importable import ImportableModelMixin
 from common.models.timestamped import TimestampedModelMixin
 from common.models.uuid import UuidModelMixin
+from core.models.geo_custom_zone import GeoCustomZone
 from core.models.object_type import ObjectType
 from core.models.parcel import Parcel
 
@@ -23,6 +24,9 @@ class DetectionObject(
         blank=True,
         null=True,
         on_delete=models.CASCADE,
+    )
+    geo_custom_zones = models.ManyToManyField(
+        GeoCustomZone, related_name="detection_objects"
     )
 
     class Meta:
