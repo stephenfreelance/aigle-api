@@ -28,13 +28,6 @@ class Command(BaseCommand):
         )
 
         for zone in custom_zones:
-            print(f"Updating simplified geometry for zone: {zone.name}")
-
-            zone.geometry_simplified = zone.geometry.simplify(
-                tolerance=10, preserve_topology=True
-            )
-            zone.save()
-
             print(f"Updating detection data for zone: {zone.name}")
 
             # clean previously inside detections that are now outside

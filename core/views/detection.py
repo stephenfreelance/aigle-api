@@ -5,7 +5,6 @@ from django.db.models import Q
 from functools import reduce
 from django_filters import FilterSet
 from django_filters import NumberFilter, ChoiceFilter
-from django.contrib.gis.db.models.functions import Centroid
 from core.models.detection import Detection
 from core.models.detection_data import (
     DetectionControlStatus,
@@ -163,6 +162,14 @@ class DetectionFilter(FilterSet):
                     )
 
             for previous_tile_set in previous_tile_sets:
+                # custom logic here: we want to display the detections on the last tileset
+                # if the last tileset for a zone is partial, we also want to display detections for the last BACKGROUND tileset
+                if (
+                    tile_set.tile_set_type == TileSetType.BACKGROUND
+                    and previous_tile_set.tile_set_type == TileSetType.PARTIAL
+                ):
+                    continue
+
                 where = where & ~Q(geometry__intersects=previous_tile_set.intersection)
 
             wheres.append(where)
@@ -210,7 +217,7 @@ class DetectionViewSet(BaseViewSetMixin[Detection]):
         return DetectionDetailSerializer
 
     def get_queryset(self):
-        queryset = Detection.objects.order_by("-created_at")
+        queryset = Detection.objects.order_by("tile_set__date", "id")
         queryset = queryset.prefetch_related(
             "detection_object", "detection_object__object_type", "tile", "tile_set"
         ).select_related("detection_data")

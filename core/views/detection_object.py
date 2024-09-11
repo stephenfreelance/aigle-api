@@ -37,6 +37,10 @@ class DetectionObjectViewSet(BaseViewSetMixin[DetectionObject]):
             "detections__tile_set",
             "detections__detection_data",
         )
+
+        if self.action == "retrieve":
+            queryset = queryset.prefetch_related("geo_custom_zones")
+
         return queryset
 
     def retrieve(self, request, *args, **kwargs):

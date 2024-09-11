@@ -1,7 +1,6 @@
 from common.constants.models import DEFAULT_MAX_LENGTH
 from core.models.geo_zone import GeoZone
 from django.db import models
-from django.contrib.gis.db import models as models_gis
 
 
 class GeoCustomZoneStatus(models.TextChoices):
@@ -16,4 +15,3 @@ class GeoCustomZone(GeoZone):
         choices=GeoCustomZoneStatus.choices,
         default=GeoCustomZoneStatus.ACTIVE,
     )
-    geometry_simplified = models_gis.GeometryField(null=True)
