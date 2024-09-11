@@ -1,18 +1,16 @@
 from common.views.base import BaseViewSetMixin
 
 from operator import or_
-from django.db.models import Q, OuterRef, Exists
+from django.db.models import Q
 from functools import reduce
 from django_filters import FilterSet
 from django_filters import NumberFilter, ChoiceFilter
-from django.contrib.gis.db.models.functions import Centroid
 from core.models.detection import Detection
 from core.models.detection_data import (
     DetectionControlStatus,
     DetectionPrescriptionStatus,
     DetectionValidationStatus,
 )
-from core.models.geo_custom_zone import GeoCustomZone
 from core.models.tile_set import TileSetType
 from core.serializers.detection import (
     DetectionDetailSerializer,
@@ -129,7 +127,6 @@ class DetectionFilter(FilterSet):
 
         if not ne_lat or not ne_lng or not sw_lat or not sw_lng:
             return queryset
-
         polygon_requested = Polygon.from_bbox((sw_lng, sw_lat, ne_lng, ne_lat))
         polygon_requested.srid = 4326
 
@@ -140,11 +137,6 @@ class DetectionFilter(FilterSet):
             filter_tile_set_uuid__in=tile_sets_uuids,
         )
 
-        centroid = Centroid("geometry")
-
-        # Annotate the queryset with the centroid of the geometry
-        queryset = queryset.annotate(centroid=centroid)
-
         wheres = []
 
         for i in range(len(tile_sets)):
@@ -154,23 +146,31 @@ class DetectionFilter(FilterSet):
             if tile_set.intersection:
                 where = (
                     Q(tile_set__uuid=tile_set.uuid)
-                    & Q(centroid__intersects=tile_set.intersection)
-                    & Q(centroid__intersects=polygon_requested)
+                    & Q(geometry__intersects=tile_set.intersection)
+                    & Q(geometry__intersects=polygon_requested)
                 )
             else:
                 if global_geometry:
                     where = (
                         Q(tile_set__uuid=tile_set.uuid)
-                        & Q(centroid__intersects=polygon_requested)
-                        & Q(centroid__within=global_geometry)
+                        & Q(geometry__intersects=polygon_requested)
+                        & Q(geometry__within=global_geometry)
                     )
                 else:
                     where = Q(tile_set__uuid=tile_set.uuid) & Q(
-                        centroid__intersects=polygon_requested
+                        geometry__intersects=polygon_requested
                     )
 
             for previous_tile_set in previous_tile_sets:
-                where = where & ~Q(centroid__within=previous_tile_set.intersection)
+                # custom logic here: we want to display the detections on the last tileset
+                # if the last tileset for a zone is partial, we also want to display detections for the last BACKGROUND tileset
+                if (
+                    tile_set.tile_set_type == TileSetType.BACKGROUND
+                    and previous_tile_set.tile_set_type == TileSetType.PARTIAL
+                ):
+                    continue
+
+                where = where & ~Q(geometry__intersects=previous_tile_set.intersection)
 
             wheres.append(where)
 
@@ -192,10 +192,9 @@ class DetectionFilter(FilterSet):
         )
 
         if custom_zones_uuids:
-            custom_zones_subquery = GeoCustomZone.objects.filter(
-                uuid__in=custom_zones_uuids, geometry__contains=OuterRef("centroid")
+            queryset = queryset.filter(
+                detection_object__geo_custom_zones__uuid__in=custom_zones_uuids
             )
-            queryset = queryset.filter(Exists(custom_zones_subquery))
 
         return queryset
 
@@ -218,7 +217,7 @@ class DetectionViewSet(BaseViewSetMixin[Detection]):
         return DetectionDetailSerializer
 
     def get_queryset(self):
-        queryset = Detection.objects.order_by("-created_at")
+        queryset = Detection.objects.order_by("tile_set__date", "id")
         queryset = queryset.prefetch_related(
             "detection_object", "detection_object__object_type", "tile", "tile_set"
         ).select_related("detection_data")

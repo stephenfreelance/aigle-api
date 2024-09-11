@@ -1,17 +1,21 @@
+from rest_framework.response import Response
 from common.views.base import BaseViewSetMixin
 
 
+from rest_framework import serializers
 from core.contants.order_by import GEO_CUSTOM_ZONES_ORDER_BYS
-from core.models.geo_custom_zone import GeoCustomZone
+from core.models.geo_custom_zone import GeoCustomZone, GeoCustomZoneStatus
 from core.serializers.geo_custom_zone import (
     GeoCustomZoneGeoFeatureSerializer,
     GeoCustomZoneSerializer,
 )
 from django_filters import FilterSet, CharFilter
-from django.db.models import F
+
+from rest_framework.decorators import action
 
 from core.utils.permissions import AdminRolePermission
-from core.utils.postgis import SimplifyPreserveTopology
+from django.contrib.gis.geos import Polygon
+from django.contrib.gis.db.models.functions import Intersection
 
 
 class GeoCustomZoneFilter(FilterSet):
@@ -38,18 +42,5 @@ class GeoCustomZoneViewSet(BaseViewSetMixin[GeoCustomZone]):
 
     def get_queryset(self):
         queryset = GeoCustomZone.objects.order_by(*GEO_CUSTOM_ZONES_ORDER_BYS)
-
-        if self.action in ["retrieve"] and self.request.GET.get("geometry"):
-            queryset = queryset.values(
-                "uuid",
-                "name",
-                "color",
-                "geo_custom_zone_status",
-                "created_at",
-                "updated_at",
-            )
-            queryset = queryset.annotate(
-                geometry=SimplifyPreserveTopology(F("geometry"), 10)
-            )
 
         return queryset

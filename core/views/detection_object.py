@@ -29,15 +29,18 @@ class DetectionObjectViewSet(BaseViewSetMixin[DetectionObject]):
 
     def get_queryset(self):
         queryset = DetectionObject.objects.order_by("-detections__tile_set__date")
-        queryset = queryset.prefetch_related(
+        queryset = queryset.select_related(
+            "object_type", "parcel", "parcel__commune"
+        ).prefetch_related(
             "detections",
             "detections__tile",
             "detections__tile_set",
             "detections__detection_data",
-            "object_type",
-            "parcel",
-            "parcel__commune",
         )
+
+        if self.action == "retrieve":
+            queryset = queryset.prefetch_related("geo_custom_zones")
+
         return queryset
 
     def retrieve(self, request, *args, **kwargs):

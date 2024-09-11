@@ -6,6 +6,7 @@ from core.models.detection_data import (
     DetectionValidationStatus,
 )
 from core.models.detection_object import DetectionObject
+from core.models.geo_custom_zone import GeoCustomZone
 from core.models.object_type import ObjectType
 from core.models.parcel import Parcel
 from core.models.tile import TILE_DEFAULT_ZOOM, Tile
@@ -39,6 +40,7 @@ class DetectionMinimalSerializer(
             "detection_validation_status",
             "detection_prescription_status",
             "detection_object_uuid",
+            "tile_set_type",
         ]
 
     object_type_uuid = serializers.CharField(source="detection_object.object_type.uuid")
@@ -58,6 +60,7 @@ class DetectionMinimalSerializer(
         choices=DetectionPrescriptionStatus.choices,
     )
     detection_object_uuid = serializers.CharField(source="detection_object.uuid")
+    tile_set_type = serializers.CharField(source="tile_set.tile_set_type")
 
 
 class DetectionSerializer(UuidTimestampedModelSerializerMixin):
@@ -177,6 +180,16 @@ class DetectionInputSerializer(DetectionSerializer):
 
             parcel = Parcel.objects.filter(geometry__contains=centroid).first()
             detection_object.parcel = parcel
+
+            detection_object.save()
+
+            # update geo_custom_zones
+
+            geo_custom_zones = GeoCustomZone.objects.filter(
+                geometry__intersects=validated_data["geometry"]
+            ).all()
+
+            detection_object.geo_custom_zones.add(*geo_custom_zones)
 
             detection_object.save()
 

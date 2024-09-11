@@ -230,6 +230,8 @@ class Command(BaseCommand):
                 if (
                     geometry.intersection(linked_detection.geometry).area
                     > geometry.area * PERCENTAGE_SAME_DETECTION_THRESHOLD
+                    or linked_detection.geometry.intersection(geometry).area
+                    > geometry.area * PERCENTAGE_SAME_DETECTION_THRESHOLD
                 ):
                     print(f"Detection already exists in tileset {
                           self.tile_set.name} and is going to be inserted. Skipping...")
@@ -258,6 +260,8 @@ class Command(BaseCommand):
                 for detection in linked_detections_queryset.all()
                 if detection.intersection_area.sq_m
                 >= geometry.area * PERCENTAGE_SAME_DETECTION_THRESHOLD
+                or detection.intersection_area.sq_m
+                >= detection.geometry.area * PERCENTAGE_SAME_DETECTION_THRESHOLD
             ]
         )
 
@@ -349,12 +353,15 @@ class Command(BaseCommand):
             )
             self.detection_objects_to_insert.append(detection_object)
 
-
             if not detection_data.detection_control_status:
-                detection_data.detection_control_status = DetectionControlStatus.NOT_CONTROLLED
+                detection_data.detection_control_status = (
+                    DetectionControlStatus.NOT_CONTROLLED
+                )
 
             if not detection_data.detection_validation_status:
-                detection_data.detection_validation_status = DetectionValidationStatus.DETECTED_NOT_VERIFIED
+                detection_data.detection_validation_status = (
+                    DetectionValidationStatus.DETECTED_NOT_VERIFIED
+                )
 
         # detection
 
