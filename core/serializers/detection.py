@@ -186,7 +186,7 @@ class DetectionInputSerializer(DetectionSerializer):
             # update geo_custom_zones
 
             geo_custom_zones = GeoCustomZone.objects.filter(
-                geometry__intersects=centroid
+                geometry__intersects=validated_data["geometry"]
             ).all()
 
             detection_object.geo_custom_zones.add(*geo_custom_zones)
