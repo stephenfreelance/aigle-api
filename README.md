@@ -112,14 +112,17 @@ from
 join core_detection detec on
 	detec.detection_object_id = dobj.id
 where
-	ST_Intersects(detec.geometry,
-	(
-	select
-		geozone.geometry
-	from
-		core_geozone geozone
-	where
-		id = {custom_zone_id}))
+	ST_Intersects(
+		detec.geometry,
+		(
+		select
+			geozone.geometry
+		from
+			core_geozone geozone
+		where
+			id = {custom_zone_id}
+		)
+	)
 ```
 
 ### Emails

@@ -214,7 +214,7 @@ class DetectionInputSerializer(DetectionSerializer):
             # default value
             detection_data = DetectionData(
                 detection_control_status=DetectionControlStatus.NOT_CONTROLLED,
-                detection_validation_status=DetectionValidationStatus.DETECTED_NOT_VERIFIED,
+                detection_validation_status=DetectionValidationStatus.SUSPECT,
             )
 
         if (
