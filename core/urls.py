@@ -13,6 +13,7 @@ from core.views.tile_set import TileSetViewSet
 from core.views.user import UserViewSet
 from rest_framework.routers import DefaultRouter
 from core.views.utils import urls as utils_urls
+from core.views.statistics import urls as statistics_urls
 from django.urls import path
 
 from core.views.user_group import UserGroupViewSet
@@ -51,3 +52,4 @@ urlpatterns += [
     path("map-settings/", MapSettingsView.as_view(), name="MapSettingsView")
 ]
 urlpatterns += utils_urls
+urlpatterns += statistics_urls
