@@ -3,7 +3,6 @@ from django.contrib.gis.geos import GEOSGeometry
 from django.db import connection
 from django.contrib.gis.db.models.functions import Intersection
 
-from core.models.user import User
 import uuid
 import json
 import shapefile

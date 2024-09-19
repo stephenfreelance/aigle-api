@@ -17,7 +17,14 @@ from core.utils.permissions import AdminRolePermission
 from django.contrib.gis.geos import Polygon
 from django.contrib.gis.db.models.functions import Intersection
 
-from core.views.utils.get_custom_geometry import GeometrySerializer
+
+class GeometrySerializer(serializers.Serializer):
+    neLat = serializers.FloatField()
+    neLng = serializers.FloatField()
+    swLat = serializers.FloatField()
+    swLng = serializers.FloatField()
+
+    uuids = serializers.CharField(required=False, allow_null=True)
 
 
 class GeoCustomZoneFilter(FilterSet):
