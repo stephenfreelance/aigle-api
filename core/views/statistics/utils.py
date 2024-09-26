@@ -1,10 +1,21 @@
+from typing import Optional
 from django.db.models import Q
+from django.contrib.gis.geos.collections import MultiPolygon
 
 from core.models.detection_data import DetectionPrescriptionStatus
 
 
-def get_detections_where_clauses(base_path_detection: str, endpoint_serializer):
+def get_detections_where_clauses(
+    base_path_detection: str,
+    endpoint_serializer,
+    global_geometry: Optional[MultiPolygon],
+):
     detections_where_clauses = Q()
+
+    if global_geometry:
+        detections_where_clauses = detections_where_clauses & Q(
+            **{f"{base_path_detection}geometry__intersects": global_geometry}
+        )
 
     if endpoint_serializer.validated_data.get("detectionValidationStatuses"):
         detections_where_clauses = detections_where_clauses & Q(

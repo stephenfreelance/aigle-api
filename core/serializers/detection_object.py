@@ -26,6 +26,7 @@ class DetectionObjectMinimalSerializer(UuidTimestampedModelSerializerMixin):
         fields = UuidTimestampedModelSerializerMixin.Meta.fields + [
             "id",
             "address",
+            "comment",
             "object_type",
         ]
 
@@ -193,7 +194,7 @@ class DetectionObjectDetailSerializer(DetectionObjectSerializer):
 
 class DetectionObjectInputSerializer(DetectionObjectSerializer):
     class Meta(DetectionObjectSerializer.Meta):
-        fields = ["address", "object_type_uuid"]
+        fields = ["address", "object_type_uuid", "comment"]
 
     object_type_uuid = serializers.UUIDField(write_only=True)
 

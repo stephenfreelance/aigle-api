@@ -15,6 +15,7 @@ class DetectionObject(
     TimestampedModelMixin, UuidModelMixin, DeletableModelMixin, ImportableModelMixin
 ):
     address = models.CharField(max_length=DEFAULT_MAX_LENGTH, null=True)
+    comment = models.TextField(null=True)
     object_type = models.ForeignKey(
         ObjectType, related_name="detected_objects", on_delete=models.CASCADE
     )
