@@ -18,6 +18,7 @@ from django.contrib.gis.db.models.functions import Centroid
 
 from django.contrib.gis.db.models.functions import Intersection, Area
 from django.db.models import Value
+from django.db.models import Q
 
 from core.models.object_type import ObjectType
 from core.models.parcel import Parcel
@@ -215,31 +216,40 @@ class Command(BaseCommand):
 
         serialized_detection = serializer.validated_data
 
-        # get linked detections
+        # WE DO NOT FILTER OUT DETECTIONS THAT ARE NOT IN THE SAME TILE SET ANYMORE
 
-        # linked detections in the ones to insert
+        # # get linked detections
 
-        linked_detections_to_insert = [
-            detection
-            for detection in self.detections_to_insert
-            if detection.geometry.intersects(geometry)
-            and detection.detection_object.object_type == object_type
-        ]
-        if linked_detections_to_insert:
-            for linked_detection in linked_detections_to_insert:
-                if (
-                    geometry.intersection(linked_detection.geometry).area
-                    > geometry.area * PERCENTAGE_SAME_DETECTION_THRESHOLD
-                    or linked_detection.geometry.intersection(geometry).area
-                    > geometry.area * PERCENTAGE_SAME_DETECTION_THRESHOLD
-                ):
-                    print(f"Detection already exists in tileset {
-                          self.tile_set.name} and is going to be inserted. Skipping...")
-                    return
+        # # linked detections in the ones to insert
+
+        # linked_detections_to_insert = [
+        #     detection
+        #     for detection in self.detections_to_insert
+        #     if detection.geometry.intersects(geometry)
+        #     and detection.detection_object.object_type == object_type
+        # ]
+        # if linked_detections_to_insert:
+        #     for linked_detection in linked_detections_to_insert:
+        #         if (
+        #             geometry.intersection(linked_detection.geometry).area
+        #             > geometry.area * PERCENTAGE_SAME_DETECTION_THRESHOLD
+        #             or linked_detection.geometry.intersection(geometry).area
+        #             > geometry.area * PERCENTAGE_SAME_DETECTION_THRESHOLD
+        #         ):
+        #             print(f"Detection already exists in tileset {
+        #                   self.tile_set.name} and is going to be inserted. Skipping...")
+        #             return
 
         # linked detections already in the database
 
         linked_detections_queryset = Detection.objects
+        # WE DO NOT FILTER OUT DETECTIONS THAT ARE NOT IN THE SAME TILE SET ANYMORE
+        linked_detections_queryset = linked_detections_queryset.filter(
+            ~Q(tile_set__id=self.tile_set.id)
+        )
+        linked_detections_queryset = linked_detections_queryset.order_by(
+            "-tile_set__date"
+        )
         linked_detections_queryset = linked_detections_queryset.filter(
             geometry__intersects=geometry, detection_object__object_type=object_type
         )
@@ -265,21 +275,23 @@ class Command(BaseCommand):
             ]
         )
 
-        # deal with linked detections
+        # WE DO NOT FILTER OUT DETECTIONS THAT ARE NOT IN THE SAME TILE SET ANYMORE
 
-        linked_detection_same_tileset = next(
-            (
-                detection
-                for detection in linked_detections
-                if detection.tile_set.id == self.tile_set.id
-            ),
-            None,
-        )
+        # # deal with linked detections
 
-        if linked_detection_same_tileset:
-            print(f"Detection already exists in tileset {self.tile_set.name}, id: {
-                  linked_detection_same_tileset.id}. Skipping...")
-            return
+        # linked_detection_same_tileset = next(
+        #     (
+        #         detection
+        #         for detection in linked_detections
+        #         if detection.tile_set.id == self.tile_set.id
+        #     ),
+        #     None,
+        # )
+
+        # if linked_detection_same_tileset:
+        #     print(f"Detection already exists in tileset {self.tile_set.name}, id: {
+        #           linked_detection_same_tileset.id}. Skipping...")
+        #     return
 
         # create detection
 

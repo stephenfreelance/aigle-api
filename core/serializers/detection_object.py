@@ -1,5 +1,6 @@
 from django.utils import timezone
 from typing import List, Optional
+from common.constants.models import DEFAULT_MAX_LENGTH
 from core.models.detection_object import DetectionObject
 from core.models.object_type import ObjectType
 from core.models.tile_set import TileSet, TileSetType
@@ -30,6 +31,9 @@ class DetectionObjectMinimalSerializer(UuidTimestampedModelSerializerMixin):
             "object_type",
         ]
 
+    comment = serializers.CharField(
+        max_length=DEFAULT_MAX_LENGTH, allow_null=True, allow_blank=True, required=False
+    )
     object_type = ObjectTypeSerializer(read_only=True)
 
 
