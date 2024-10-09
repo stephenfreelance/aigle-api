@@ -123,6 +123,7 @@ where
 			id = {custom_zone_id}
 		)
 	)
+ON CONFLICT DO NOTHING;
 ```
 
 ### Emails

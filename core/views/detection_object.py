@@ -36,6 +36,9 @@ class DetectionObjectViewSet(BaseViewSetMixin[DetectionObject]):
             "detections__tile",
             "detections__tile_set",
             "detections__detection_data",
+            "detections__detection_data__user_last_update",
+            "detections__detection_data__user_last_update__user_user_groups",
+            "detections__detection_data__user_last_update__user_user_groups__user_group",
         )
 
         if self.action == "retrieve":

@@ -17,6 +17,7 @@ from core.serializers.object_type import ObjectTypeSerializer
 from rest_framework import serializers
 
 from core.serializers.tile_set import TileSetMinimalSerializer
+from core.serializers.user_group import UserGroupSerializer
 from core.utils.data_permissions import get_user_group_rights, get_user_tile_sets
 from core.utils.prescription import compute_prescription
 
@@ -111,6 +112,7 @@ class DetectionObjectDetailSerializer(DetectionObjectSerializer):
             "tile_sets",
             "user_group_rights",
             "geo_custom_zones",
+            "user_group_last_update",
         ]
 
     detections = serializers.SerializerMethodField()
@@ -118,6 +120,29 @@ class DetectionObjectDetailSerializer(DetectionObjectSerializer):
     user_group_rights = serializers.SerializerMethodField()
     parcel = ParcelSerializer(read_only=True)
     geo_custom_zones = GeoCustomZoneSerializer(many=True, read_only=True)
+    user_group_last_update = serializers.SerializerMethodField(read_only=True)
+
+    def get_user_group_last_update(self, obj: DetectionObject):
+        most_recent_detection_update = (
+            obj.detections.select_related("detection_data")
+            .order_by("-updated_at")
+            .first()
+        )
+        detection_data = most_recent_detection_update.detection_data
+
+        if not detection_data.user_last_update:
+            return None
+
+        user_user_group = (
+            detection_data.user_last_update.user_user_groups.order_by("created_at")
+            .all()
+            .first()
+        )
+
+        if not user_user_group:
+            return None
+
+        return UserGroupSerializer(user_user_group.user_group).data
 
     def get_detections(self, obj: DetectionObject):
         user = self.context["request"].user
