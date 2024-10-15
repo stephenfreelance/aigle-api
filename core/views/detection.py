@@ -178,6 +178,9 @@ class DetectionFilter(FilterSet):
             if not tile_set.intersection:
                 break
 
+        if not wheres:
+            return queryset
+
         if len(wheres) == 1:
             queryset = queryset.filter(wheres[0])
         else:
