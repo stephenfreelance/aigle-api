@@ -13,6 +13,7 @@ from django.core.validators import MinValueValidator, MaxValueValidator
 
 from core.models.tile import Tile
 from core.models.tile_set import TileSet
+from simple_history.models import HistoricalRecords
 
 
 class DetectionSource(models.TextChoices):
@@ -48,6 +49,8 @@ class Detection(
     tile_set = models.ForeignKey(
         TileSet, related_name="detections", on_delete=models.CASCADE
     )
+
+    history = HistoricalRecords()
 
     class Meta:
         indexes = UuidModelMixin.Meta.indexes + [

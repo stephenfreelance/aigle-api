@@ -5,6 +5,7 @@ from common.constants.models import DEFAULT_MAX_LENGTH
 from common.models.deletable import DeletableModelMixin
 from common.models.timestamped import TimestampedModelMixin
 from common.models.uuid import UuidModelMixin
+from simple_history.models import HistoricalRecords
 
 from core.models.user import User
 
@@ -56,6 +57,7 @@ class DetectionData(TimestampedModelMixin, UuidModelMixin, DeletableModelMixin):
         on_delete=models.SET_NULL,
         null=True,
     )
+    history = HistoricalRecords()
 
     class Meta:
         indexes = UuidModelMixin.Meta.indexes + [

@@ -9,6 +9,7 @@ from common.models.uuid import UuidModelMixin
 from core.models.geo_custom_zone import GeoCustomZone
 from core.models.object_type import ObjectType
 from core.models.parcel import Parcel
+from simple_history.models import HistoricalRecords
 
 
 class DetectionObject(
@@ -29,6 +30,7 @@ class DetectionObject(
     geo_custom_zones = models.ManyToManyField(
         GeoCustomZone, related_name="detection_objects"
     )
+    history = HistoricalRecords()
 
     class Meta:
         indexes = UuidModelMixin.Meta.indexes + []
