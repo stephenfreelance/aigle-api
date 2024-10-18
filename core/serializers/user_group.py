@@ -20,6 +20,7 @@ class UserGroupSerializer(UuidTimestampedModelSerializerMixin):
         model = UserGroup
         fields = UuidTimestampedModelSerializerMixin.Meta.fields + [
             "name",
+            "user_group_type",
         ]
 
 
@@ -70,6 +71,7 @@ class UserGroupInputSerializer(UserGroupDetailSerializer):
             "departments_uuids",
             "regions_uuids",
             "object_type_categories_uuids",
+            "user_group_type",
         ]
 
     geo_custom_zones_uuids = serializers.ListField(

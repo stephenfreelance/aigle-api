@@ -1,4 +1,8 @@
-from core.models.detection_data import DetectionData, DetectionPrescriptionStatus
+from core.models.detection_data import (
+    DetectionData,
+    DetectionPrescriptionStatus,
+    DetectionValidationStatus,
+)
 from core.models.detection import Detection
 from core.models.tile_set import TileSet, TileSetType
 from core.models.user_group import UserGroupRight
@@ -34,7 +38,7 @@ class DetectionDataInputSerializer(DetectionDataSerializer):
             "detection_prescription_status",
         ]
 
-    def update(self, instance, validated_data):
+    def update(self, instance: DetectionData, validated_data):
         user = self.context["request"].user
         centroid = Centroid(instance.detection.geometry)
 
@@ -42,7 +46,7 @@ class DetectionDataInputSerializer(DetectionDataSerializer):
             user=user, point=centroid, raise_if_has_no_right=UserGroupRight.WRITE
         )
 
-        # if object get prescripbted, we add data for the prescribed years
+        # if object get prescribed, we add data for the prescribed years
         if (
             "detection_prescription_status" in validated_data
             and instance.detection_prescription_status
@@ -97,6 +101,12 @@ class DetectionDataInputSerializer(DetectionDataSerializer):
 
         for key, value in validated_data.items():
             setattr(instance, key, value)
+
+        if (
+            instance.detection_validation_status
+            == DetectionValidationStatus.DETECTED_NOT_VERIFIED
+        ):
+            instance.detection_validation_status = DetectionValidationStatus.SUSPECT
 
         instance.user_last_update = user
         instance.save()
