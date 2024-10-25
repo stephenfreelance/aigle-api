@@ -38,4 +38,13 @@ class UserViewSet(
     def get_queryset(self):
         queryset = UserModel.objects.order_by("-id")
 
+        if self.request.user.user_role == UserRole.ADMIN:
+            queryset = queryset.filter(user_role=UserRole.REGULAR)
+            user_group_ids = self.request.user.user_user_groups.values_list(
+                "user_group__id", flat=True
+            )
+            queryset = queryset.filter(
+                user_user_groups__user_group__id__in=user_group_ids
+            )
+
         return queryset
