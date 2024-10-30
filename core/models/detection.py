@@ -3,6 +3,7 @@ from django.db import models
 
 from common.constants.models import DEFAULT_MAX_LENGTH
 from common.models.deletable import DeletableModelMixin
+from common.models.historied import HistoriedModelMixin
 from common.models.importable import ImportableModelMixin
 from common.models.timestamped import TimestampedModelMixin
 from common.models.uuid import UuidModelMixin
@@ -50,7 +51,7 @@ class Detection(
         TileSet, related_name="detections", on_delete=models.CASCADE
     )
 
-    history = HistoricalRecords()
+    history = HistoricalRecords(bases=[HistoriedModelMixin])
 
     class Meta:
         indexes = UuidModelMixin.Meta.indexes + [

@@ -8,7 +8,6 @@ from core.models.detection_data import (
     DetectionPrescriptionStatus,
     DetectionValidationStatus,
 )
-from django.core.exceptions import PermissionDenied
 from core.models.object_type import ObjectType
 from core.models.tile_set import TileSet
 
@@ -29,11 +28,6 @@ def format_list(list_: List[List[str]], format_fn=None) -> List[str]:
 
 
 def endpoint(request):
-    if request.user.user_role != request.user.SUPER_ADMIN:
-        raise PermissionDenied(
-            "Vous devez être super admin pour accéder à cette ressource"
-        )
-
     object_types_names = ObjectType.objects.values_list("name").all()
     tile_sets_names = TileSet.objects.values_list("name").all()
     DetectionSource.choices
