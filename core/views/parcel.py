@@ -73,10 +73,17 @@ class ParcelViewSet(BaseViewSetMixin[Parcel]):
         return queryset
 
     @action(methods=["get"], detail=True)
-    def get_download_infos(self, request, *args, **kwargs):
-        create_log(self.request.user, AnalyticLogType.REPORT_DOWNLOAD)
+    def get_download_infos(self, request, uuid, *args, **kwargs):
+        create_log(
+            self.request.user,
+            AnalyticLogType.REPORT_DOWNLOAD,
+            {
+                "parcelUuid": uuid,
+                "detectionObjectUuid": self.request.GET.get("detectionObjectUuid"),
+            },
+        )
 
-        return self.retrieve(request, *args, **kwargs)
+        return self.retrieve(request, uuid, *args, **kwargs)
 
     @action(methods=["get"], detail=False)
     def suggest_section(self, request):
