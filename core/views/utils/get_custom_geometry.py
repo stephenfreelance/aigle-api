@@ -46,17 +46,13 @@ def endpoint(request):
     queryset = queryset.filter(geo_custom_zone_status=GeoCustomZoneStatus.ACTIVE)
     queryset = queryset.filter(geometry__intersects=polygon_requested)
     queryset = queryset.values(
-        "uuid",
-        "name",
-        "color",
-        "geo_custom_zone_status",
+        "uuid", "name", "color", "geo_custom_zone_status", "geo_custom_zone_type"
     )
     queryset = queryset.annotate(geometry=Intersection("geometry", polygon_requested))
 
-    serializer = GeoCustomZoneGeoFeatureSerializer(data=queryset.all(), many=True)
-    serializer.is_valid()
-
-    return JsonResponse(serializer.data)
+    return JsonResponse(
+        GeoCustomZoneGeoFeatureSerializer(queryset.all(), many=True).data, safe=False
+    )
 
 
 URL = "get-custom-geometry/"
