@@ -5,7 +5,7 @@ from django.db.models import Q
 from functools import reduce
 from django_filters import FilterSet
 from django_filters import NumberFilter, ChoiceFilter
-from core.models.detection import Detection
+from core.models.detection import Detection, DetectionSource
 from django.core.exceptions import BadRequest
 
 from core.models.detection_data import (
@@ -37,6 +37,11 @@ from django.contrib.gis.geos import Polygon
 from rest_framework.decorators import action
 
 BOOLEAN_CHOICES = (("false", "False"), ("true", "True"), ("null", "Null"))
+INTERFACE_DRAWN_CHOICES = (
+    ("ALL", "ALL"),
+    ("INSIDE_SELECTED_ZONES", "INSIDE_SELECTED_ZONES"),
+    ("NONE", "NONE"),
+)
 
 
 class DetectionFilter(FilterSet):
@@ -64,6 +69,7 @@ class DetectionFilter(FilterSet):
 
     score = NumberFilter(method="filter_score")
     prescripted = ChoiceFilter(choices=BOOLEAN_CHOICES, method="filter_prescripted")
+    interfaceDrawn = ChoiceFilter(choices=INTERFACE_DRAWN_CHOICES, method="pass_")
 
     def pass_(self, queryset, name, value):
         return queryset
@@ -206,8 +212,22 @@ class DetectionFilter(FilterSet):
         )
 
         if custom_zones_uuids:
-            queryset = queryset.filter(
-                detection_object__geo_custom_zones__uuid__in=custom_zones_uuids
+            if self.data.get("interfaceDrawn") == "ALL":
+                queryset = queryset.filter(
+                    Q(detection_object__geo_custom_zones__uuid__in=custom_zones_uuids)
+                    | Q(detection_source=DetectionSource.INTERFACE_DRAWN)
+                )
+
+            if not self.data.get("interfaceDrawn") or self.data.get(
+                "interfaceDrawn"
+            ) in ["INSIDE_SELECTED_ZONES", "NONE"]:
+                queryset = queryset.filter(
+                    detection_object__geo_custom_zones__uuid__in=custom_zones_uuids
+                )
+
+        if self.data.get("interfaceDrawn") == "NONE":
+            queryset = queryset.exclude(
+                detection_source=DetectionSource.INTERFACE_DRAWN
             )
 
         return queryset
