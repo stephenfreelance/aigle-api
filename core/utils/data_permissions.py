@@ -14,6 +14,7 @@ from django.core.exceptions import PermissionDenied
 from django.contrib.gis.db.models.aggregates import Union
 
 from core.utils.postgis import GeometryType, GetGeometryType
+from django.contrib.gis.geos import Point
 
 
 def get_user_tile_sets(
@@ -158,7 +159,7 @@ def get_user_object_types_with_status(
 
 
 def get_user_group_rights(
-    user, point, raise_if_has_no_right: Optional[UserGroupRight] = None
+    user, points: List[Point], raise_if_has_no_right: Optional[UserGroupRight] = None
 ) -> List[UserGroupRight]:
     if user.user_role == UserRole.SUPER_ADMIN:
         return [
@@ -170,7 +171,8 @@ def get_user_group_rights(
     user_user_groups = user.user_user_groups.annotate(
         union_geometry=Union("user_group__geo_zones__geometry")
     )
-    user_user_groups = user_user_groups.filter(union_geometry__contains=point)
+    for point in points:
+        user_user_groups = user_user_groups.filter(union_geometry__contains=point)
 
     user_group_rights = set()
 
@@ -179,8 +181,7 @@ def get_user_group_rights(
 
     res = list(user_group_rights)
 
-    if raise_if_has_no_right:
-        if raise_if_has_no_right not in res:
-            raise PermissionDenied("Vous n'avez pas les droits pour éditer cette zone")
+    if raise_if_has_no_right and raise_if_has_no_right not in res:
+        raise PermissionDenied("Vous n'avez pas les droits pour éditer cette zone")
 
     return res

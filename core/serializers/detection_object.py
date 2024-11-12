@@ -218,7 +218,7 @@ class DetectionObjectDetailSerializer(DetectionObjectSerializer):
         user = self.context["request"].user
         point = Centroid(obj.detections.first().geometry)
 
-        return get_user_group_rights(user=user, point=point)
+        return get_user_group_rights(user=user, points=[point])
 
 
 class DetectionObjectInputSerializer(DetectionObjectSerializer):
@@ -244,7 +244,7 @@ class DetectionObjectInputSerializer(DetectionObjectSerializer):
         centroid = Centroid(instance.detections.first().geometry)
 
         get_user_group_rights(
-            user=user, point=centroid, raise_if_has_no_right=UserGroupRight.WRITE
+            user=user, points=[centroid], raise_if_has_no_right=UserGroupRight.WRITE
         )
 
         if object_type:

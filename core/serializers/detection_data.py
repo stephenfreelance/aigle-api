@@ -43,7 +43,7 @@ class DetectionDataInputSerializer(DetectionDataSerializer):
         centroid = Centroid(instance.detection.geometry)
 
         get_user_group_rights(
-            user=user, point=centroid, raise_if_has_no_right=UserGroupRight.WRITE
+            user=user, points=[centroid], raise_if_has_no_right=UserGroupRight.WRITE
         )
 
         # if object get prescribed, we add data for the prescribed years

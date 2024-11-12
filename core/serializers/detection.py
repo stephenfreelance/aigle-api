@@ -107,6 +107,31 @@ class DetectionDetailSerializer(DetectionWithTileSerializer):
     detection_object = DetectionObjectSerializer(read_only=True)
 
 
+class DetectionMultipleInputSerializer(serializers.Serializer):
+    uuids = serializers.ListField(child=serializers.UUIDField(), required=True)
+    object_type_uuid = serializers.UUIDField(required=False)
+    detection_control_status = serializers.ChoiceField(
+        required=False,
+        choices=DetectionControlStatus.choices,
+    )
+    detection_validation_status = serializers.ChoiceField(
+        required=False,
+        choices=DetectionValidationStatus.choices,
+    )
+
+    def validate(self, data):
+        if (
+            not data.get("object_type_uuid")
+            and not data.get("detection_control_status")
+            and not data.get("detection_validation_status")
+        ):
+            raise serializers.ValidationError(
+                "Vous devez spécifier au moins un de ces champs : object_type_uuid, detection_control_status, detection_validation_status"
+            )
+
+        return data
+
+
 class DetectionInputSerializer(DetectionSerializer):
     from core.serializers.detection_object import DetectionObjectInputSerializer
 
@@ -129,7 +154,7 @@ class DetectionInputSerializer(DetectionSerializer):
         centroid = Centroid(validated_data["geometry"])
 
         get_user_group_rights(
-            user=user, point=centroid, raise_if_has_no_right=UserGroupRight.WRITE
+            user=user, points=[centroid], raise_if_has_no_right=UserGroupRight.WRITE
         )
 
         # create or retrieve detection object
@@ -266,7 +291,7 @@ class DetectionUpdateSerializer(DetectionSerializer):
         centroid = Centroid(instance.geometry)
 
         get_user_group_rights(
-            user=user, point=centroid, raise_if_has_no_right=UserGroupRight.WRITE
+            user=user, points=[centroid], raise_if_has_no_right=UserGroupRight.WRITE
         )
 
         object_type_uuid = validated_data.get("object_type_uuid")

@@ -6,24 +6,35 @@ from functools import reduce
 from django_filters import FilterSet
 from django_filters import NumberFilter, ChoiceFilter
 from core.models.detection import Detection
+from django.core.exceptions import BadRequest
+
 from core.models.detection_data import (
     DetectionControlStatus,
+    DetectionData,
     DetectionPrescriptionStatus,
     DetectionValidationStatus,
 )
+from rest_framework.status import HTTP_200_OK
+from django.http import HttpResponse
+from core.models.detection_object import DetectionObject
+from core.models.object_type import ObjectType
 from core.models.tile_set import TileSetType
+from core.models.user_group import UserGroupRight
 from core.serializers.detection import (
     DetectionDetailSerializer,
     DetectionInputSerializer,
     DetectionMinimalSerializer,
+    DetectionMultipleInputSerializer,
     DetectionUpdateSerializer,
 )
 from core.utils.data_permissions import (
+    get_user_group_rights,
     get_user_object_types_with_status,
     get_user_tile_sets,
 )
 from core.utils.filters import ChoiceInFilter, UuidInFilter
 from django.contrib.gis.geos import Polygon
+from rest_framework.decorators import action
 
 BOOLEAN_CHOICES = (("false", "False"), ("true", "True"), ("null", "Null"))
 
@@ -204,6 +215,71 @@ class DetectionFilter(FilterSet):
 
 class DetectionViewSet(BaseViewSetMixin[Detection]):
     filterset_class = DetectionFilter
+
+    @action(methods=["post"], detail=False, url_path="multiple")
+    def edit_multiple(self, request):
+        serializer = DetectionMultipleInputSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        detections_queryset = self.get_queryset()
+        detections_queryset = detections_queryset.filter(
+            uuid__in=serializer.validated_data["uuids"]
+        )
+        detections = detections_queryset.all()
+
+        points = [detection.geometry.centroid for detection in detections]
+
+        get_user_group_rights(
+            user=request.user, points=points, raise_if_has_no_right=UserGroupRight.WRITE
+        )
+
+        detection_data_fields_to_update = []
+
+        if serializer.validated_data.get("detection_control_status"):
+            detection_data_fields_to_update.append("detection_control_status")
+        if serializer.validated_data.get("detection_validation_status"):
+            detection_data_fields_to_update.append("detection_validation_status")
+
+        object_type = None
+        if serializer.validated_data.get("object_type_uuid"):
+            object_type_uuid = serializer.validated_data.get("object_type_uuid")
+            object_type = ObjectType.objects.filter(uuid=object_type_uuid).first()
+
+            if not object_type:
+                raise BadRequest(
+                    f"Object type with following uuid not found: {
+                        object_type_uuid}"
+                )
+
+        detection_datas_to_update = []
+        detection_objects_to_update = []
+
+        for detection in detections:
+            if detection_data_fields_to_update:
+                for field in detection_data_fields_to_update:
+                    setattr(
+                        detection.detection_data,
+                        field,
+                        serializer.validated_data[field],
+                    )
+
+                detection_datas_to_update.append(detection.detection_data)
+
+            if object_type:
+                detection.detection_object.object_type = object_type
+                detection_objects_to_update.append(detection.detection_object)
+
+        if detection_data_fields_to_update:
+            DetectionData.objects.bulk_update(
+                detection_datas_to_update, detection_data_fields_to_update
+            )
+
+        if object_type:
+            DetectionObject.objects.bulk_update(
+                detection_objects_to_update, ["object_type"]
+            )
+
+        return HttpResponse(status=HTTP_200_OK)
 
     def get_serializer_class(self):
         if self.action in ["create"]:
