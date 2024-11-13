@@ -143,7 +143,7 @@ class DetectionFilter(FilterSet):
         sw_lng = self.data.get("swLng")
 
         if not ne_lat or not ne_lng or not sw_lat or not sw_lng:
-            return queryset
+            return queryset.distinct()
         polygon_requested = Polygon.from_bbox((sw_lng, sw_lat, ne_lng, ne_lat))
         polygon_requested.srid = 4326
 
@@ -196,7 +196,7 @@ class DetectionFilter(FilterSet):
                 break
 
         if not wheres:
-            return queryset
+            return queryset.distinct()
 
         if len(wheres) == 1:
             queryset = queryset.filter(wheres[0])
@@ -230,7 +230,7 @@ class DetectionFilter(FilterSet):
                 detection_source=DetectionSource.INTERFACE_DRAWN
             )
 
-        return queryset
+        return queryset.distinct()
 
 
 class DetectionViewSet(BaseViewSetMixin[Detection]):
