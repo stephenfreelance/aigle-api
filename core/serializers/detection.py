@@ -23,6 +23,7 @@ from core.serializers.tile_set import TileSetMinimalSerializer
 from django.contrib.gis.db.models.functions import Centroid
 
 from core.utils.data_permissions import get_user_group_rights
+from core.utils.detection import get_linked_detections
 from core.utils.prescription import compute_prescription
 
 
@@ -198,25 +199,36 @@ class DetectionInputSerializer(DetectionSerializer):
                         object_type_uuid}"
                 )
 
-            # get tile_set and tile
+            # search for existing detection object
 
-            detection_object = DetectionObject(**detection_object_data)
-            detection_object.object_type = object_type
+            linked_detections = get_linked_detections(
+                detection_geometry=validated_data["geometry"],
+                object_type_id=object_type.id,
+                exclude_tile_set_ids=[tile_set.id],
+            )
 
-            parcel = Parcel.objects.filter(geometry__contains=centroid).first()
-            detection_object.parcel = parcel
+            if linked_detections:
+                detection_object = linked_detections[0].detection_object
+            else:
+                # get tile_set and tile
 
-            detection_object.save()
+                detection_object = DetectionObject(**detection_object_data)
+                detection_object.object_type = object_type
 
-            # update geo_custom_zones
+                parcel = Parcel.objects.filter(geometry__contains=centroid).first()
+                detection_object.parcel = parcel
 
-            geo_custom_zones = GeoCustomZone.objects.filter(
-                geometry__intersects=validated_data["geometry"]
-            ).all()
+                detection_object.save()
 
-            detection_object.geo_custom_zones.add(*geo_custom_zones)
+                # update geo_custom_zones
 
-            detection_object.save()
+                geo_custom_zones = GeoCustomZone.objects.filter(
+                    geometry__intersects=validated_data["geometry"]
+                ).all()
+
+                detection_object.geo_custom_zones.add(*geo_custom_zones)
+
+                detection_object.save()
 
         if detection_object_uuid:
             detection_object = DetectionObject.objects.filter(

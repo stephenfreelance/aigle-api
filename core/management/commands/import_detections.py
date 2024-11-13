@@ -16,15 +16,13 @@ from core.models.detection_object import DetectionObject
 from django.contrib.gis.geos import GEOSGeometry
 from django.contrib.gis.db.models.functions import Centroid
 
-from django.contrib.gis.db.models.functions import Intersection, Area
-from django.db.models import Value
-from django.db.models import Q
 
 from core.models.object_type import ObjectType
 from core.models.parcel import Parcel
 from core.models.tile import TILE_DEFAULT_ZOOM, Tile
 from core.models.tile_set import TileSet
 from core.models.user import User
+from core.utils.detection import get_linked_detections
 from core.utils.prescription import compute_prescription
 from core.utils.string import normalize
 
@@ -242,37 +240,11 @@ class Command(BaseCommand):
 
         # linked detections already in the database
 
-        linked_detections_queryset = Detection.objects
-        # WE DO NOT FILTER OUT DETECTIONS THAT ARE NOT IN THE SAME TILE SET ANYMORE
-        linked_detections_queryset = linked_detections_queryset.filter(
-            ~Q(tile_set__id=self.tile_set.id)
-        )
-        linked_detections_queryset = linked_detections_queryset.order_by(
-            "-tile_set__date"
-        )
-        linked_detections_queryset = linked_detections_queryset.filter(
-            geometry__intersects=geometry, detection_object__object_type=object_type
-        )
-        linked_detections_queryset = linked_detections_queryset.annotate(
-            intersection_area=Area(Intersection("geometry", Value(geometry)))
-        )
-        linked_detections_queryset = linked_detections_queryset.order_by(
-            "-intersection_area"
-        )
-        linked_detections_queryset = linked_detections_queryset.prefetch_related(
-            "detection_object", "detection_object__object_type"
-        )
-
         # we filter out detections that have too small intersection area with the detection
-        linked_detections = list(
-            [
-                detection
-                for detection in linked_detections_queryset.all()
-                if detection.intersection_area.sq_m
-                >= geometry.area * PERCENTAGE_SAME_DETECTION_THRESHOLD
-                or detection.intersection_area.sq_m
-                >= detection.geometry.area * PERCENTAGE_SAME_DETECTION_THRESHOLD
-            ]
+        linked_detections = get_linked_detections(
+            detection_geometry=geometry,
+            object_type_id=object_type.id,
+            exclude_tile_set_ids=[self.tile_set.id],
         )
 
         # WE DO NOT FILTER OUT DETECTIONS THAT ARE NOT IN THE SAME TILE SET ANYMORE

@@ -110,7 +110,7 @@ def get_user_object_types_with_status(
     user,
 ) -> List[Tuple[ObjectType, ObjectTypeCategoryObjectTypeStatus]]:
     if user.user_role == UserRole.SUPER_ADMIN:
-        object_types = ObjectType.objects.all()
+        object_types = ObjectType.objects.order_by("name").all()
 
         return [
             (object_type, ObjectTypeCategoryObjectTypeStatus.VISIBLE)
@@ -154,6 +154,8 @@ def get_user_object_types_with_status(
 
     for object_type, status in object_type_uuids_statuses_map.values():
         object_types_with_status.append((object_type, status))
+
+    object_types_with_status = sorted(object_types_with_status, key=lambda x: x[0].name)
 
     return object_types_with_status
 
