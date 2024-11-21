@@ -32,6 +32,7 @@ from core.utils.data_permissions import (
     get_user_object_types_with_status,
     get_user_tile_sets,
 )
+from simple_history.utils import bulk_update_with_history
 from core.utils.filters import ChoiceInFilter, UuidInFilter
 from django.contrib.gis.geos import Polygon
 from rest_framework.decorators import action
@@ -290,13 +291,15 @@ class DetectionViewSet(BaseViewSetMixin[Detection]):
                 detection_objects_to_update.append(detection.detection_object)
 
         if detection_data_fields_to_update:
-            DetectionData.objects.bulk_update(
-                detection_datas_to_update, detection_data_fields_to_update
+            bulk_update_with_history(
+                detection_datas_to_update,
+                DetectionData,
+                detection_data_fields_to_update,
             )
 
         if object_type:
-            DetectionObject.objects.bulk_update(
-                detection_objects_to_update, ["object_type"]
+            bulk_update_with_history(
+                detection_objects_to_update, DetectionObject, ["object_type"]
             )
 
         return HttpResponse(status=HTTP_200_OK)

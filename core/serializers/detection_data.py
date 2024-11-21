@@ -9,7 +9,7 @@ from core.models.user_group import UserGroupRight
 from core.serializers import UuidTimestampedModelSerializerMixin
 from django.contrib.gis.db.models.functions import Centroid
 from dateutil.relativedelta import relativedelta
-
+from simple_history.utils import bulk_create_with_history
 from rest_framework import serializers
 
 from core.utils.data_permissions import get_user_group_rights
@@ -97,7 +97,7 @@ class DetectionDataInputSerializer(DetectionDataSerializer):
                     )
                     detections_to_insert.append(detection)
 
-                Detection.objects.bulk_create(detections_to_insert)
+                bulk_create_with_history(detections_to_insert, Detection)
 
         for key, value in validated_data.items():
             setattr(instance, key, value)

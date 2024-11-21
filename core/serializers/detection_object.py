@@ -66,11 +66,11 @@ class DetectionObjectHistorySerializer(DetectionObjectSerializer):
     def get_detections(self, obj: DetectionObject):
         user = self.context["request"].user
         detections = obj.detections.all()
-        tile_sets, global_geometry = get_user_tile_sets(
+        tile_sets, _ = get_user_tile_sets(
             user=user,
             filter_tile_set_type__in=[TileSetType.PARTIAL, TileSetType.BACKGROUND],
             order_bys=["-date"],
-            filter_tile_set_contains_point=Centroid(detections[0].geometry),
+            filter_tile_set_intersects_geometry=detections[0].geometry,
         )
 
         if not tile_sets:
@@ -150,13 +150,11 @@ class DetectionObjectDetailSerializer(DetectionObjectSerializer):
         if self.context.get("tile_sets"):
             tile_sets = self.context["tile_sets"]
         else:
-            tile_sets, global_geometry = get_user_tile_sets(
+            tile_sets, _ = get_user_tile_sets(
                 user=user,
                 filter_tile_set_type__in=[TileSetType.PARTIAL, TileSetType.BACKGROUND],
                 order_bys=["-date"],
-                filter_tile_set_contains_point=Centroid(
-                    obj.detections.all()[0].geometry
-                ),
+                filter_tile_set_intersects_geometry=obj.detections.all()[0].geometry,
             )
             self.context["tile_sets"] = tile_sets
 
@@ -173,13 +171,11 @@ class DetectionObjectDetailSerializer(DetectionObjectSerializer):
         if self.context.get("tile_sets"):
             tile_sets = self.context["tile_sets"]
         else:
-            tile_sets, global_geometry = get_user_tile_sets(
+            tile_sets, _ = get_user_tile_sets(
                 user=user,
                 filter_tile_set_type__in=[TileSetType.PARTIAL, TileSetType.BACKGROUND],
                 order_bys=["-date"],
-                filter_tile_set_contains_point=Centroid(
-                    obj.detections.all()[0].geometry
-                ),
+                filter_tile_set_intersects_geometry=obj.detections.all()[0].geometry,
             )
             self.context["tile_sets"] = tile_sets
 

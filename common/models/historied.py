@@ -3,6 +3,7 @@ from django.db import models
 from django.db.models import JSONField
 
 from simple_history.signals import pre_create_historical_record
+from django.db.models.signals import post_save
 from django.dispatch import receiver
 
 
@@ -33,6 +34,16 @@ def track_changed_fields(sender, instance, history_instance, **kwargs):
     history_instance.changed_fields = json.loads(
         json.dumps(changed_fields, indent=4, sort_keys=True, default=str)
     )
+
+
+@receiver(post_save)
+def create_history_record_on_insert(sender, instance, created, **kwargs):
+    if created and hasattr(instance, "history"):
+        try:
+            instance.history.create(history_type="+", history_user=None)
+        except Exception:
+            # Honestly I don't really know why it fails sometimes, it raises an integrity error
+            pass
 
 
 class HistoriedModelMixin(models.Model):

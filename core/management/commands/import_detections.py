@@ -25,6 +25,7 @@ from core.models.user import User
 from core.utils.detection import get_linked_detections
 from core.utils.prescription import compute_prescription
 from core.utils.string import normalize
+from simple_history.utils import bulk_create_with_history
 
 PERCENTAGE_SAME_DETECTION_THRESHOLD = 0.5
 USER_REVIEWER_MAIL = "user.reviewer.default.aigle@aigle.beta.gouv.fr"
@@ -378,9 +379,9 @@ class Command(BaseCommand):
 
         print(f"Inserting {len(self.detections_to_insert)} detections")
 
-        DetectionObject.objects.bulk_create(self.detection_objects_to_insert)
-        DetectionData.objects.bulk_create(self.detection_datas_to_insert)
-        Detection.objects.bulk_create(self.detections_to_insert)
+        bulk_create_with_history(self.detection_objects_to_insert, DetectionObject)
+        bulk_create_with_history(self.detection_datas_to_insert, DetectionData)
+        bulk_create_with_history(self.detections_to_insert, Detection)
 
         detection_objects = [
             detection.detection_object for detection in self.detections_to_insert
