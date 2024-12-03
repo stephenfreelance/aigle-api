@@ -16,16 +16,16 @@ from core.models.detection_object import DetectionObject
 from django.contrib.gis.geos import GEOSGeometry
 from django.contrib.gis.db.models.functions import Centroid
 
-from django.contrib.gis.db.models.functions import Intersection, Area
-from django.db.models import Value
 
 from core.models.object_type import ObjectType
 from core.models.parcel import Parcel
 from core.models.tile import TILE_DEFAULT_ZOOM, Tile
 from core.models.tile_set import TileSet
 from core.models.user import User
+from core.utils.detection import get_linked_detections
 from core.utils.prescription import compute_prescription
 from core.utils.string import normalize
+from simple_history.utils import bulk_create_with_history
 
 PERCENTAGE_SAME_DETECTION_THRESHOLD = 0.5
 USER_REVIEWER_MAIL = "user.reviewer.default.aigle@aigle.beta.gouv.fr"
@@ -215,71 +215,56 @@ class Command(BaseCommand):
 
         serialized_detection = serializer.validated_data
 
-        # get linked detections
+        # WE DO NOT FILTER OUT DETECTIONS THAT ARE NOT IN THE SAME TILE SET ANYMORE
 
-        # linked detections in the ones to insert
+        # # get linked detections
 
-        linked_detections_to_insert = [
-            detection
-            for detection in self.detections_to_insert
-            if detection.geometry.intersects(geometry)
-            and detection.detection_object.object_type == object_type
-        ]
-        if linked_detections_to_insert:
-            for linked_detection in linked_detections_to_insert:
-                if (
-                    geometry.intersection(linked_detection.geometry).area
-                    > geometry.area * PERCENTAGE_SAME_DETECTION_THRESHOLD
-                    or linked_detection.geometry.intersection(geometry).area
-                    > geometry.area * PERCENTAGE_SAME_DETECTION_THRESHOLD
-                ):
-                    print(f"Detection already exists in tileset {
-                          self.tile_set.name} and is going to be inserted. Skipping...")
-                    return
+        # # linked detections in the ones to insert
+
+        # linked_detections_to_insert = [
+        #     detection
+        #     for detection in self.detections_to_insert
+        #     if detection.geometry.intersects(geometry)
+        #     and detection.detection_object.object_type == object_type
+        # ]
+        # if linked_detections_to_insert:
+        #     for linked_detection in linked_detections_to_insert:
+        #         if (
+        #             geometry.intersection(linked_detection.geometry).area
+        #             > geometry.area * PERCENTAGE_SAME_DETECTION_THRESHOLD
+        #             or linked_detection.geometry.intersection(geometry).area
+        #             > geometry.area * PERCENTAGE_SAME_DETECTION_THRESHOLD
+        #         ):
+        #             print(f"Detection already exists in tileset {
+        #                   self.tile_set.name} and is going to be inserted. Skipping...")
+        #             return
 
         # linked detections already in the database
 
-        linked_detections_queryset = Detection.objects
-        linked_detections_queryset = linked_detections_queryset.filter(
-            geometry__intersects=geometry, detection_object__object_type=object_type
-        )
-        linked_detections_queryset = linked_detections_queryset.annotate(
-            intersection_area=Area(Intersection("geometry", Value(geometry)))
-        )
-        linked_detections_queryset = linked_detections_queryset.order_by(
-            "-intersection_area"
-        )
-        linked_detections_queryset = linked_detections_queryset.prefetch_related(
-            "detection_object", "detection_object__object_type"
-        )
-
         # we filter out detections that have too small intersection area with the detection
-        linked_detections = list(
-            [
-                detection
-                for detection in linked_detections_queryset.all()
-                if detection.intersection_area.sq_m
-                >= geometry.area * PERCENTAGE_SAME_DETECTION_THRESHOLD
-                or detection.intersection_area.sq_m
-                >= detection.geometry.area * PERCENTAGE_SAME_DETECTION_THRESHOLD
-            ]
+        linked_detections = get_linked_detections(
+            detection_geometry=geometry,
+            object_type_id=object_type.id,
+            exclude_tile_set_ids=[self.tile_set.id],
         )
 
-        # deal with linked detections
+        # WE DO NOT FILTER OUT DETECTIONS THAT ARE NOT IN THE SAME TILE SET ANYMORE
 
-        linked_detection_same_tileset = next(
-            (
-                detection
-                for detection in linked_detections
-                if detection.tile_set.id == self.tile_set.id
-            ),
-            None,
-        )
+        # # deal with linked detections
 
-        if linked_detection_same_tileset:
-            print(f"Detection already exists in tileset {self.tile_set.name}, id: {
-                  linked_detection_same_tileset.id}. Skipping...")
-            return
+        # linked_detection_same_tileset = next(
+        #     (
+        #         detection
+        #         for detection in linked_detections
+        #         if detection.tile_set.id == self.tile_set.id
+        #     ),
+        #     None,
+        # )
+
+        # if linked_detection_same_tileset:
+        #     print(f"Detection already exists in tileset {self.tile_set.name}, id: {
+        #           linked_detection_same_tileset.id}. Skipping...")
+        #     return
 
         # create detection
 
@@ -394,9 +379,9 @@ class Command(BaseCommand):
 
         print(f"Inserting {len(self.detections_to_insert)} detections")
 
-        DetectionObject.objects.bulk_create(self.detection_objects_to_insert)
-        DetectionData.objects.bulk_create(self.detection_datas_to_insert)
-        Detection.objects.bulk_create(self.detections_to_insert)
+        bulk_create_with_history(self.detection_objects_to_insert, DetectionObject)
+        bulk_create_with_history(self.detection_datas_to_insert, DetectionData)
+        bulk_create_with_history(self.detections_to_insert, Detection)
 
         detection_objects = [
             detection.detection_object for detection in self.detections_to_insert

@@ -11,12 +11,39 @@ from core.serializers.detection_object import (
 )
 from rest_framework.decorators import action
 
+from core.utils.filters import UuidInFilter
 from core.views.utils.save_user_position import save_user_position
+from django_filters import FilterSet
+
+
+class DetectionObjectFilter(FilterSet):
+    uuids = UuidInFilter(method="filter_uuids")
+    detectionUuids = UuidInFilter(method="filter_detection_uuids")
+
+    class Meta:
+        model = DetectionObject
+        fields = ["uuids"]
+
+    def filter_uuids(self, queryset, name, value):
+        if not value:
+            return queryset
+
+        return queryset.filter(uuid__in=value)
+
+    def filter_detection_uuids(self, queryset, name, value):
+        if not value:
+            return queryset
+
+        return queryset.filter(detections__uuid__in=value)
 
 
 class DetectionObjectViewSet(BaseViewSetMixin[DetectionObject]):
+    filterset_class = DetectionObjectFilter
+
     def get_serializer_class(self):
-        if self.action == "retrieve":
+        detail = bool(self.request.query_params.get("detail"))
+
+        if self.action == "retrieve" or detail:
             return DetectionObjectDetailSerializer
 
         if self.action in ["partial_update", "update"]:
@@ -36,6 +63,9 @@ class DetectionObjectViewSet(BaseViewSetMixin[DetectionObject]):
             "detections__tile",
             "detections__tile_set",
             "detections__detection_data",
+            "detections__detection_data__user_last_update",
+            "detections__detection_data__user_last_update__user_user_groups",
+            "detections__detection_data__user_last_update__user_user_groups__user_group",
         )
 
         if self.action == "retrieve":

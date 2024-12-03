@@ -18,6 +18,15 @@ from django.contrib.gis.geos import Polygon
 from django.contrib.gis.db.models.functions import Intersection
 
 
+class GeometrySerializer(serializers.Serializer):
+    neLat = serializers.FloatField()
+    neLng = serializers.FloatField()
+    swLat = serializers.FloatField()
+    swLng = serializers.FloatField()
+
+    uuids = serializers.CharField(required=False, allow_null=True)
+
+
 class GeoCustomZoneFilter(FilterSet):
     q = CharFilter(method="search")
 
@@ -44,3 +53,45 @@ class GeoCustomZoneViewSet(BaseViewSetMixin[GeoCustomZone]):
         queryset = GeoCustomZone.objects.order_by(*GEO_CUSTOM_ZONES_ORDER_BYS)
 
         return queryset
+
+    @action(methods=["get"], detail=False)
+    def get_geometry(self, request):
+        geometry_serializer = GeometrySerializer(data=request.GET)
+        geometry_serializer.is_valid(raise_exception=True)
+
+        polygon_requested = Polygon.from_bbox(
+            (
+                geometry_serializer.data["swLng"],
+                geometry_serializer.data["swLat"],
+                geometry_serializer.data["neLng"],
+                geometry_serializer.data["neLat"],
+            )
+        )
+        polygon_requested.srid = 4326
+
+        queryset = self.get_queryset()
+
+        if geometry_serializer.data.get("uuids"):
+            try:
+                queryset = queryset.filter(
+                    uuid__in=geometry_serializer.data["uuids"].split(",")
+                )
+            except Exception:
+                pass
+
+        queryset = queryset.filter(geo_custom_zone_status=GeoCustomZoneStatus.ACTIVE)
+        queryset = queryset.filter(geometry__intersects=polygon_requested)
+        queryset = queryset.values(
+            "uuid",
+            "name",
+            "color",
+            "geo_custom_zone_status",
+        )
+        queryset = queryset.annotate(
+            geometry=Intersection("geometry", polygon_requested)
+        )
+
+        serializer = GeoCustomZoneGeoFeatureSerializer(data=queryset.all(), many=True)
+        serializer.is_valid()
+
+        return Response(serializer.data)

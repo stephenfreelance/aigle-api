@@ -1,14 +1,11 @@
 from django.http import JsonResponse
 
 from rest_framework import serializers
-from rest_framework.response import Response
 
 
 from core.contants.order_by import GEO_CUSTOM_ZONES_ORDER_BYS
 from core.models.geo_custom_zone import GeoCustomZone, GeoCustomZoneStatus
 from core.serializers.geo_custom_zone import GeoCustomZoneGeoFeatureSerializer
-from core.utils.data_permissions import get_user_tile_sets
-from core.utils.filters import UuidInFilter
 from django.contrib.gis.geos import Polygon
 from django.contrib.gis.db.models.functions import Intersection
 
@@ -43,23 +40,19 @@ def endpoint(request):
             queryset = queryset.filter(
                 uuid__in=geometry_serializer.data["uuids"].split(",")
             )
-        except:
+        except Exception:
             pass
 
     queryset = queryset.filter(geo_custom_zone_status=GeoCustomZoneStatus.ACTIVE)
     queryset = queryset.filter(geometry__intersects=polygon_requested)
     queryset = queryset.values(
-        "uuid",
-        "name",
-        "color",
-        "geo_custom_zone_status",
+        "uuid", "name", "color", "geo_custom_zone_status", "geo_custom_zone_type"
     )
     queryset = queryset.annotate(geometry=Intersection("geometry", polygon_requested))
 
-    serializer = GeoCustomZoneGeoFeatureSerializer(data=queryset.all(), many=True)
-    serializer.is_valid()
-
-    return JsonResponse(serializer.data)
+    return JsonResponse(
+        GeoCustomZoneGeoFeatureSerializer(queryset.all(), many=True).data, safe=False
+    )
 
 
 URL = "get-custom-geometry/"
