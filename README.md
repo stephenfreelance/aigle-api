@@ -164,7 +164,7 @@ select
         when rel.control_status_id = 2 then 'SIGNALED_COMMUNE'
         when rel.control_status_id = 3 then 'SIGNALED_COLLECTIVITY'
         when rel.control_status_id = 4 then 'CONTROLLED_FIELD'
-        when rel.control_status_id = 5 then 'REHABILITED'
+        when rel.control_status_id = 5 then 'REHABILITATED'
         when rel.control_status_id = 6 then 'VERBALIZED'
     end
     as "detection_control_status",
