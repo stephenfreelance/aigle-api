@@ -6,15 +6,19 @@ from django.http import JsonResponse
 from core.models.detection import Detection
 from django.contrib.gis.geos import Polygon
 
+from core.models.tile import Tile
 from core.views.detection import DetectionFilter
 
 from django.core.exceptions import BadRequest
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
-from django.db import connection
-from django.contrib.gis.geos import GEOSGeometry, MultiPolygon
+from django.contrib.gis.geos import MultiPolygon
+from django.db.models import F, Value, IntegerField, Func, ExpressionWrapper
+from django.contrib.gis.db.models.aggregates import Union
+from django.db.models import Count
 
-GRID_SIZE = 0.01
+
+GRID_SIZE = 6
 
 
 def serialize_to_feature_collection(grid_elements):
@@ -25,11 +29,11 @@ def serialize_to_feature_collection(grid_elements):
                 "type": "Feature",
                 "geometry": json.loads(element["geometry"].geojson),
                 "properties": {
-                    "i": element["i"],
-                    "j": element["j"],
+                    "x": element["x"],
+                    "y": element["y"],
                     "total": element["total"],
                     "reviewed": element["reviewed"],
-                    "text": f'{element["i"]} | {element["j"]}\n{element["reviewed"]}/{element["total"]} revues',
+                    "text": f'{element["x"]} | {element["y"]}\n{element["reviewed"]} vérifiés/{element["total"]} détectés',
                 },
             }
         )
@@ -38,6 +42,11 @@ def serialize_to_feature_collection(grid_elements):
         "type": "FeatureCollection",
         "features": features,
     }
+
+
+class Floor(Func):
+    function = "FLOOR"
+    arity = 1  # FLOOR only takes one argument
 
 
 @api_view(["GET"])
@@ -51,23 +60,35 @@ def endpoint(request):
             request.GET["neLat"],
         )
     )
+    # extend polygon to be sure to have all tiles
+    polygon_requested = polygon_requested.buffer(0.01)
 
-    with connection.cursor() as cursor:
-        cursor.execute(f"""
-            SELECT
-                ST_AsText(geom),
-                i,
-                j
-            FROM
-                ST_SquareGrid (
-                    {GRID_SIZE},
-                    ST_GeomFromText('{str(polygon_requested)}', 4326)
-                )
-        """)
-        grid_raw = cursor.fetchall()
-        grid = [(GEOSGeometry(row[0]), row[1], row[2]) for row in grid_raw]
+    # Adjust x and y by GRID_SIZE for grouping
+    tiles = (
+        Tile.objects.filter(geometry__intersects=polygon_requested)
+        .annotate(
+            grouped_x=ExpressionWrapper(
+                Floor(F("x") / Value(GRID_SIZE)) * GRID_SIZE,
+                output_field=IntegerField(),
+            ),
+            grouped_y=ExpressionWrapper(
+                Floor(F("y") / Value(GRID_SIZE)) * GRID_SIZE,
+                output_field=IntegerField(),
+            ),
+            nbr=Count("id"),
+        )
+        .filter(
+            # exclude grouped tiles that are not full to avoid mistakes in counting
+            nbr=GRID_SIZE * GRID_SIZE
+        )
+    )
 
-    all_geometries = MultiPolygon([row[0] for row in grid])
+    # Group by grouped_x and grouped_y and calculate the union
+    grouped_tiles = tiles.values("grouped_x", "grouped_y").annotate(
+        group_geometry=Union("geometry")
+    )
+
+    all_geometries = MultiPolygon([tile["group_geometry"] for tile in grouped_tiles])
     sw_lng, sw_lat, ne_lng, ne_lat = all_geometries.extent
 
     # we want to get all detections contained in the grid
@@ -97,25 +118,27 @@ def endpoint(request):
     # Iterate over detections and count occurrences in each grid cell
     for detection_raw in detections_raw:
         detection_centroid = detection_raw[2].centroid
-        for cell, i, j in grid:
-            if cell.contains(detection_centroid):
-                grid_items_total[(i, j)] += 1
+        for tile in grouped_tiles:
+            if tile["group_geometry"].contains(detection_centroid):
+                grid_items_total[(tile["grouped_x"], tile["grouped_y"])] += 1
 
                 if detection_raw[1] != "DETECTED_NOT_VERIFIED":
-                    grid_items_reviewed[(i, j)] += 1
+                    grid_items_reviewed[(tile["grouped_x"], tile["grouped_y"])] += 1
 
                 break
 
     # Output results
     grid_with_counts = [
         {
-            "geometry": cell,
-            "i": i,
-            "j": j,
-            "total": grid_items_total.get((i, j), 0),
-            "reviewed": grid_items_reviewed.get((i, j), 0),
+            "geometry": tile["group_geometry"],
+            "x": tile["grouped_x"],
+            "y": tile["grouped_y"],
+            "total": grid_items_total.get((tile["grouped_x"], tile["grouped_y"]), 0),
+            "reviewed": grid_items_reviewed.get(
+                (tile["grouped_x"], tile["grouped_y"]), 0
+            ),
         }
-        for cell, i, j in grid
+        for tile in grouped_tiles
     ]
 
     return JsonResponse(serialize_to_feature_collection(grid_with_counts), safe=False)
